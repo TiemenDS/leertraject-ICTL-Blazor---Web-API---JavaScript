@@ -1266,18 +1266,61 @@ const LS = {
   progress:"wd_progress_",   // + nick → {lessonId:bestScore}
   board:"wd_leaderboard"
 };
+
+/* =========================================================================
+   GEDEELD SCOREBORD  —  JSONBin.io  (gratis, geen server nodig)
+   -------------------------------------------------------------------------
+   Vul hieronder je eigen Bin ID en X-Master-Key in om het scorebord te
+   DELEN met alle bezoekers. Hoe je die maakt: zie de uitleg in de chat.
+   Laat je de placeholders staan, dan werkt het bord gewoon LOKAAL.
+   ========================================================================= */
+const SHARED = {
+  binId: "6a26aa2cf5f4af5e29cae88b",
+  key:   "$2a$10$eZo3VQ6ser1OMzQjMUlLBOVAYjSmSezzMc6r3xXGG3HyHPxEfkSOS"
+};
+const SHARED_ON = () => SHARED.binId && SHARED.key
+  && !SHARED.binId.startsWith("JOUW_") && !SHARED.key.startsWith("JOUW_");
+
+let boardCache = [];                 // in-memory kopie van het scorebord
 let state = { nick:null, progress:{}, view:null };
 
 function lessonList(){ const out=[]; COURSE.forEach(m=>m.lessons.forEach(l=>out.push({m,l}))); return out; }
 function totalLessons(){ return lessonList().length; }
 function doneCount(){ return Object.keys(state.progress).length; }
 function totalXP(){ let xp=0; for(const k in state.progress) xp += state.progress[k]; const b=getBoard().find(e=>e.nick===state.nick); if(b&&b.examScore) xp+=b.examScore; return xp; }
-function getBoard(){ try{return JSON.parse(localStorage.getItem(LS.board))||[]}catch(e){return[]} }
-function saveBoard(b){ localStorage.setItem(LS.board, JSON.stringify(b)); }
+function getBoard(){ return boardCache; }
 function loadProgress(){ try{state.progress=JSON.parse(localStorage.getItem(LS.progress+state.nick))||{}}catch(e){state.progress={}} }
 function saveProgress(){ localStorage.setItem(LS.progress+state.nick, JSON.stringify(state.progress)); }
 function initials(n){ return n.trim().slice(0,2).toUpperCase(); }
 function myRank(){ const b=getBoard().filter(e=>e.examScore!=null).sort((a,b)=>b.examScore-a.examScore); const i=b.findIndex(e=>e.nick===state.nick); return i>=0?"#"+(i+1):"—"; }
+
+/* ---- scorebord ophalen / opslaan ---- */
+const JB = id => `https://api.jsonbin.io/v3/b/${id}`;
+function localBoard(){ try{return JSON.parse(localStorage.getItem(LS.board))||[]}catch(e){return[]} }
+function saveLocalBoard(b){ localStorage.setItem(LS.board, JSON.stringify(b)); }
+
+async function fetchBoard(){
+  if(!SHARED_ON()) return localBoard();
+  const r = await fetch(JB(SHARED.binId)+"/latest", { headers:{ "X-Master-Key":SHARED.key } });
+  if(!r.ok) throw new Error("fetch "+r.status);
+  const j = await r.json();
+  const rec = j.record;
+  if(Array.isArray(rec)) return rec;                       // oude vorm: kale array
+  if(rec && Array.isArray(rec.scores)) return rec.scores;  // nieuwe vorm: { scores: [...] }
+  return [];
+}
+async function putBoard(arr){
+  const r = await fetch(JB(SHARED.binId), {
+    method:"PUT",
+    headers:{ "Content-Type":"application/json", "X-Master-Key":SHARED.key, "X-Bin-Versioning":"false" },
+    body: JSON.stringify({ scores: arr })
+  });
+  if(!r.ok) throw new Error("put "+r.status);
+}
+async function syncBoard(){
+  try{ boardCache = await fetchBoard(); }
+  catch(e){ console.warn("Scorebord ophalen mislukt — terugval op lokaal:", e); boardCache = localBoard(); }
+}
 
 /* =======================================================================
    ONBOARDING
@@ -1301,6 +1344,7 @@ function enterApp(){
   document.getElementById('sideNick').textContent=state.nick;
   document.getElementById('sideAvatar').textContent=initials(state.nick);
   buildNav(); navigate('home');
+  syncBoard().then(()=>{ refreshSidebarState(); if(state.view==='board') renderBoard(); });
 }
 function logout(){
   localStorage.removeItem(LS.nick);
@@ -1604,7 +1648,7 @@ function startExam(){
   const warn=el('div','quiz-result');
   footer.appendChild(submit); footer.appendChild(warn);
 
-  submit.onclick=()=>{
+  submit.onclick=async ()=>{
     if(answers.includes(null)){ warn.textContent='Beantwoord eerst alle vragen ('+answers.filter(a=>a!==null).length+'/'+EXAM.length+').'; warn.style.color='var(--red)'; return; }
     let correct=0;
     body.querySelectorAll('.qitem').forEach((item,qi)=>{
@@ -1615,8 +1659,10 @@ function startExam(){
       item.querySelector('.explain').classList.add('show');
     });
     submit.style.display='none';
+    warn.textContent='Score opslaan…'; warn.style.color='var(--dim)';
     const pct=Math.round(correct/EXAM.length*100);
-    saveExamScore(pct);
+    await saveExamScore(pct);
+    warn.textContent='';
     // banner
     const banner=el('div','exam-scorebanner');
     let col=pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
@@ -1634,12 +1680,22 @@ function startExam(){
 
   wrap.appendChild(head); wrap.appendChild(body); wrap.appendChild(footer); c.appendChild(wrap);
 }
-function saveExamScore(pct){
-  let b=getBoard(); let e=b.find(x=>x.nick===state.nick);
+async function saveExamScore(pct){
   const date=new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'short'});
-  if(e){ e.examScore=Math.max(e.examScore||0,pct); e.date=date; }
-  else { b.push({nick:state.nick,examScore:pct,date}); }
-  saveBoard(b);
+  function merge(b){
+    let e=b.find(x=>x.nick===state.nick);
+    if(e){ e.examScore=Math.max(e.examScore||0,pct); e.date=date; }
+    else { b.push({nick:state.nick,examScore:pct,date}); }
+    return b;
+  }
+  if(SHARED_ON()){
+    let b; try{ b=await fetchBoard(); }catch(e){ b=boardCache.slice(); }   // verse lijst ophalen
+    b=merge(b);
+    try{ await putBoard(b); }catch(err){ console.warn("Opslaan op scorebord mislukt:",err); }
+    boardCache=b;
+  } else {
+    let b=merge(localBoard()); saveLocalBoard(b); boardCache=b;
+  }
 }
 
 /* =======================================================================
@@ -1647,6 +1703,10 @@ function saveExamScore(pct){
    ======================================================================= */
 function renderBoard(){
   setCrumb('Scorebord');
+  drawBoard();
+  if(SHARED_ON()) syncBoard().then(()=>{ if(state.view==='board') drawBoard(); refreshSidebarState(); });
+}
+function drawBoard(){
   const c=document.getElementById('content');
   let b=getBoard().filter(e=>e.examScore!=null).sort((a,b)=>b.examScore-a.examScore);
   let rows='';
@@ -1665,18 +1725,29 @@ function renderBoard(){
       </div>`;
     });
   }
-  c.innerHTML=`<div class="section-title"><h1>🏆 Scorebord</h1></div>
-  <p class="lead">Ranking op basis van de beste examenscore. Scores worden lokaal in deze browser bewaard.</p>
+  const shared=SHARED_ON();
+  const badge=shared
+    ? `<span class="section-tag" style="margin:0;color:var(--green);background:rgba(126,231,135,.1);border-color:rgba(126,231,135,.3)">● live · gedeeld</span>`
+    : `<span class="section-tag" style="margin:0">● lokaal · alleen deze browser</span>`;
+  const lead=shared
+    ? 'Ranking op basis van de beste examenscore — gedeeld met alle bezoekers.'
+    : 'Ranking op basis van de beste examenscore. Scores staan nu enkel lokaal in deze browser. Vul een JSONBin-sleutel in om te delen.';
+  c.innerHTML=`<div class="section-title" style="justify-content:space-between"><h1>🏆 Scorebord</h1>${badge}</div>
+  <p class="lead">${lead}</p>
   <div class="lb">${rows}</div>
   <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
     <button class="btn btn-cyan" style="width:auto" onclick="navigate('exam')">📝 Doe (opnieuw) het examen</button>
+    ${shared?`<button class="btn btn-ghost" onclick="renderBoard()">↻ Verversen</button>`:''}
     <button class="btn btn-ghost" onclick="resetBoard()">Scorebord wissen</button>
   </div>`;
 }
-function resetBoard(){
-  if(confirm('Het volledige scorebord wissen? Dit kan niet ongedaan gemaakt worden.')){
-    localStorage.removeItem(LS.board); renderBoard(); refreshSidebarState();
-  }
+async function resetBoard(){
+  const msg = SHARED_ON()
+    ? 'Het GEDEELDE scorebord wissen voor IEDEREEN? Dit kan niet ongedaan gemaakt worden.'
+    : 'Je lokale scorebord wissen? Dit kan niet ongedaan gemaakt worden.';
+  if(!confirm(msg)) return;
+  if(SHARED_ON()){ try{ await putBoard([]); }catch(e){ alert('Wissen mislukt — controleer je internetverbinding.'); return; } }
+  localStorage.removeItem(LS.board); boardCache=[]; renderBoard(); refreshSidebarState();
 }
 
 /* =======================================================================
