@@ -858,7 +858,7 @@ public IActionResult AddProduct([FromBody] Product p)
 
 <script>
 console.log("Hallo wereld");
-</script>
+<\/script>
 
 </body>
 </html>`},
@@ -1067,7 +1067,7 @@ if (getal % 2 === 0) {
 }`},
         {t:"h",text:"Externe .js file"},
         {t:"p",html:"Je code kan ook in een apart bestand staan, dat je inlaadt met <code>src</code>:"},
-        {t:"code",lang:"html",code:`<script src="script.js"></script>`},
+        {t:"code",lang:"html",code:`<script src="script.js"><\/script>`},
         {t:"exercise",title:"Ticketprijs op leeftijd",diff:"gevorderd",html:"<p>Vraag de leeftijd en bepaal de ticketprijs: &lt;12 → €5, 12–17 → €8, 18–64 → €12, 65+ → €6. Toon <code>Je betaalt: €X</code>.</p>",
           sol:{lang:"javascript",code:`let leeftijd = parseInt(prompt("Wat is je leeftijd?"));
 let prijs;
@@ -1082,7 +1082,7 @@ console.log("Je betaalt: €" + prijs);`}}
         {q:"Wat doet prompt()?",opts:["Toont een bericht in de console","Vraagt invoer aan de gebruiker","Maakt een variabele","Stopt het programma"],a:1,ex:"prompt() toont een invoervenster en geeft de ingetypte tekst terug."},
         {q:"Waarom gebruik je parseInt() rond prompt()?",opts:["Voor de snelheid","Om tekst naar een getal om te zetten","Om te valideren","Het is verplicht"],a:1,ex:"prompt() geeft een string terug; parseInt() maakt er een getal van zodat je kan rekenen."},
         {q:"Hoe controleer je of een getal even is?",opts:["getal / 2 == 0","getal % 2 === 0","getal * 2 === 0","getal === even"],a:1,ex:"Een getal is even als de rest na deling door 2 gelijk is aan 0 (% 2 === 0)."},
-        {q:"Hoe laad je een extern script script.js in?",opts:["<script>script.js</script>","<link src=\"script.js\">","<script src=\"script.js\"></script>","import script.js"],a:2,ex:"<script src=\"script.js\"></script>."}
+        {q:"Hoe laad je een extern script script.js in?",opts:["<script>script.js<\/script>","<link src=\"script.js\">","<script src=\"script.js\"><\/script>","import script.js"],a:2,ex:"<script src=\"script.js\"><\/script>."}
       ]},
       { id:"js-array", title:"Arrays", body:[
         {t:"tag",text:"Module 4 · Les 2"},
