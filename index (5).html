@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WebDev Leertraject — 5ADT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+:root{
+  --bg:#0b0f17; --bg2:#11161f; --bg3:#161d29; --panel:#0f1520;
+  --border:#222c3a; --border2:#2c3a4d;
+  --text:#e7eef6; --dim:#8997ab; --dim2:#5d6b80;
+  --amber:#ffb454; --amber-d:#e89a35;
+  --cyan:#5ad6e0; --green:#7ee787; --red:#ff7b72; --purple:#d2a8ff; --blue:#79c0ff;
+  --shadow:0 18px 50px -12px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'IBM Plex Sans',sans-serif; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(800px 500px at 85% -10%, rgba(255,180,84,.07), transparent),
+    radial-gradient(700px 500px at -10% 110%, rgba(90,214,224,.06), transparent);
+  background-attachment:fixed;
+}
+code,pre,.mono{font-family:'JetBrains Mono',monospace}
+h1,h2,h3,h4{font-family:'Bricolage Grotesque',sans-serif; line-height:1.1; letter-spacing:-.02em; font-weight:700}
+::selection{background:var(--amber);color:#0b0f17}
+a{color:var(--cyan);text-decoration:none}
+.hidden{display:none!important}
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:6px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:#3a4c63}
+
+/* ================= ONBOARDING ================= */
+#onboard{
+  position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(900px 600px at 50% 30%, #131b27, #080b11);
+  padding:24px;
+}
+.ob-card{
+  width:min(560px,100%);background:var(--panel);border:1px solid var(--border2);
+  border-radius:20px;padding:42px 38px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.ob-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--amber),var(--cyan))}
+.ob-badge{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--amber);background:rgba(255,180,84,.1);border:1px solid rgba(255,180,84,.25);
+  padding:5px 12px;border-radius:999px;margin-bottom:22px}
+.ob-card h1{font-size:38px;margin-bottom:10px}
+.ob-card h1 span{color:var(--amber)}
+.ob-card p.sub{color:var(--dim);margin-bottom:28px;font-size:15px}
+.prompt-line{font-family:'JetBrains Mono',monospace;color:var(--green);font-size:13px;margin-bottom:8px}
+.ob-input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:18px;padding:15px 18px;border-radius:12px;outline:none;
+  transition:.2s}
+.ob-input:focus{border-color:var(--amber);box-shadow:0 0 0 4px rgba(255,180,84,.12)}
+.ob-err{color:var(--red);font-size:13px;height:18px;margin-top:6px}
+.btn{cursor:pointer;border:none;font-family:'IBM Plex Sans',sans-serif;font-weight:600;
+  border-radius:12px;transition:.18s;font-size:15px}
+.btn-primary{background:var(--amber);color:#0b0f17;padding:14px 22px;width:100%;margin-top:14px;font-size:16px}
+.btn-primary:hover{background:var(--amber-d);transform:translateY(-2px)}
+.btn-primary:active{transform:translateY(0)}
+
+/* ================= LAYOUT ================= */
+#app{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+/* sidebar */
+#sidebar{background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;
+  overflow-y:auto;display:flex;flex-direction:column}
+.side-head{padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Bricolage Grotesque';font-weight:700;font-size:18px}
+.logo .dot{width:11px;height:11px;border-radius:3px;background:var(--amber);box-shadow:0 0 12px var(--amber)}
+.logo small{color:var(--dim);font-weight:400;font-size:12px;font-family:'JetBrains Mono'}
+.user-chip{margin-top:14px;display:flex;align-items:center;gap:10px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:11px;padding:9px 11px}
+.avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--amber),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-weight:700;color:#0b0f17;font-size:15px;flex-shrink:0}
+.user-chip .nm{font-weight:600;font-size:14px;line-height:1.2}
+.user-chip .pts{font-size:11px;color:var(--amber);font-family:'JetBrains Mono'}
+.user-chip button{margin-left:auto;background:none;border:none;color:var(--dim2);cursor:pointer;font-size:11px;
+  font-family:'JetBrains Mono'}
+.user-chip button:hover{color:var(--red)}
+.progress-wrap{padding:14px 20px;border-bottom:1px solid var(--border)}
+.progress-wrap .lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-bottom:7px;
+  font-family:'JetBrains Mono'}
+.bar{height:7px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--cyan));border-radius:99px;
+  transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.nav{padding:10px 12px;flex:1}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--dim);
+  cursor:pointer;font-size:14px;font-weight:500;transition:.15s}
+.nav-link:hover{background:var(--bg3);color:var(--text)}
+.nav-link.active{background:rgba(255,180,84,.12);color:var(--amber)}
+.nav-link .ic{width:18px;text-align:center;font-size:15px}
+.nav-sec{font-family:'JetBrains Mono';font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--dim2);padding:16px 14px 6px}
+.module-group{margin-bottom:4px}
+.module-head{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;cursor:pointer;
+  font-weight:600;font-size:14px;color:var(--text);transition:.15s}
+.module-head:hover{background:var(--bg3)}
+.module-head .chev{margin-left:auto;color:var(--dim2);transition:.2s;font-size:11px}
+.module-head.open .chev{transform:rotate(90deg)}
+.module-head .mod-ic{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;flex-shrink:0}
+.lessons{margin:2px 0 6px 22px;border-left:1px solid var(--border);padding-left:6px}
+.lesson-link{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;color:var(--dim);
+  cursor:pointer;font-size:13px;transition:.15s}
+.lesson-link:hover{background:var(--bg3);color:var(--text)}
+.lesson-link.active{color:var(--cyan);background:rgba(90,214,224,.09)}
+.lesson-link .check{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:9px}
+.lesson-link.done .check{background:var(--green);border-color:var(--green);color:#0b0f17}
+
+/* main */
+#main{min-width:0}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(11,15,23,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:13px 32px;display:flex;align-items:center;gap:16px}
+.topbar .crumb{font-family:'JetBrains Mono';font-size:13px;color:var(--dim)}
+.topbar .crumb b{color:var(--text)}
+.topbar .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.mini-stat{font-family:'JetBrains Mono';font-size:12px;color:var(--dim);background:var(--bg3);
+  border:1px solid var(--border);padding:6px 11px;border-radius:8px}
+.mini-stat b{color:var(--amber)}
+.content{max-width:880px;margin:0 auto;padding:44px 32px 90px}
+
+/* typography in content */
+.content h1{font-size:40px;margin-bottom:8px}
+.content .lead{color:var(--dim);font-size:17px;margin-bottom:34px}
+.content h2{font-size:25px;margin:42px 0 14px;padding-top:4px}
+.content h3{font-size:18px;margin:28px 0 10px;color:var(--cyan)}
+.content p{margin:12px 0;color:#cdd7e3}
+.content ul,.content ol{margin:12px 0 12px 4px;padding-left:22px;color:#cdd7e3}
+.content li{margin:6px 0}
+.content strong{color:var(--text);font-weight:600}
+.content code:not(pre code){background:var(--bg3);border:1px solid var(--border);color:var(--amber);
+  padding:2px 7px;border-radius:6px;font-size:.88em}
+
+.section-tag{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;
+  color:var(--amber);background:rgba(255,180,84,.1);border:1px solid rgba(255,180,84,.25);
+  padding:5px 12px;border-radius:999px;margin-bottom:18px}
+
+/* code block */
+.codeblock{position:relative;margin:18px 0;border-radius:12px;overflow:hidden;border:1px solid var(--border2);
+  background:#1a1f29;box-shadow:0 6px 20px -8px rgba(0,0,0,.5)}
+.codeblock .cb-bar{display:flex;align-items:center;gap:7px;padding:9px 14px;background:#11151d;
+  border-bottom:1px solid var(--border)}
+.codeblock .cb-bar .lang{font-family:'JetBrains Mono';font-size:11px;color:var(--dim);text-transform:uppercase;
+  letter-spacing:.05em}
+.codeblock .cb-bar .dots{display:flex;gap:6px;margin-right:6px}
+.codeblock .cb-bar .dots i{width:11px;height:11px;border-radius:50%}
+.codeblock .copy{margin-left:auto;background:none;border:1px solid var(--border2);color:var(--dim);
+  font-family:'JetBrains Mono';font-size:11px;padding:3px 9px;border-radius:6px;cursor:pointer;transition:.15s}
+.codeblock .copy:hover{color:var(--amber);border-color:var(--amber)}
+.codeblock pre{margin:0;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.6}
+.codeblock pre code{background:none!important;padding:0;border:none}
+
+/* note callout */
+.note{display:flex;gap:13px;background:rgba(90,214,224,.07);border:1px solid rgba(90,214,224,.25);
+  border-left:3px solid var(--cyan);border-radius:10px;padding:14px 16px;margin:18px 0}
+.note .ic{font-size:18px;flex-shrink:0}
+.note.warn{background:rgba(255,123,114,.07);border-color:rgba(255,123,114,.3);border-left-color:var(--red)}
+.note p{margin:0;font-size:14.5px;color:#cdd7e3}
+
+/* table */
+.tbl{margin:18px 0;border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.tbl table{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{background:var(--bg3);text-align:left;padding:11px 15px;font-weight:600;color:var(--text);
+  border-bottom:1px solid var(--border);font-family:'JetBrains Mono';font-size:12px;text-transform:uppercase;
+  letter-spacing:.04em}
+.tbl td{padding:11px 15px;border-bottom:1px solid var(--border);color:#cdd7e3}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl td code{background:var(--bg3);color:var(--amber);padding:1px 6px;border-radius:5px;font-size:.9em}
+
+/* exercise */
+.exercise{margin:22px 0;border:1px solid var(--border2);border-radius:12px;background:var(--bg2);overflow:hidden}
+.ex-head{display:flex;align-items:center;gap:11px;padding:13px 17px;background:var(--bg3);
+  border-bottom:1px solid var(--border)}
+.ex-head .tag{font-family:'JetBrains Mono';font-size:11px;background:var(--purple);color:#0b0f17;
+  padding:3px 9px;border-radius:6px;font-weight:700}
+.ex-head h4{font-size:15px}
+.ex-head .diff{margin-left:auto;font-family:'JetBrains Mono';font-size:11px;color:var(--dim)}
+.ex-body{padding:15px 17px}
+.ex-body p{margin:8px 0;font-size:14.5px}
+.ex-body ul{font-size:14.5px}
+.sol-toggle{background:none;border:1px dashed var(--border2);color:var(--dim);cursor:pointer;
+  font-family:'JetBrains Mono';font-size:12px;padding:7px 13px;border-radius:8px;margin-top:8px;transition:.15s}
+.sol-toggle:hover{color:var(--green);border-color:var(--green)}
+.solution{margin-top:12px}
+
+/* ---------- QUIZ ---------- */
+.quiz{margin:30px 0;border:1px solid var(--border2);border-radius:14px;background:var(--bg2);
+  box-shadow:var(--shadow);overflow:hidden}
+.quiz-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:11px;
+  background:linear-gradient(180deg,rgba(255,180,84,.06),transparent)}
+.quiz-head .q-ic{width:30px;height:30px;border-radius:8px;background:rgba(255,180,84,.15);color:var(--amber);
+  display:flex;align-items:center;justify-content:center;font-size:15px}
+.quiz-head h3{margin:0;color:var(--text);font-size:17px}
+.quiz-head .qcount{margin-left:auto;font-family:'JetBrains Mono';font-size:12px;color:var(--dim)}
+.quiz-body{padding:8px 20px 20px}
+.qitem{padding:18px 0;border-bottom:1px solid var(--border)}
+.qitem:last-child{border-bottom:none}
+.qitem .qtext{font-weight:600;margin-bottom:12px;font-size:15.5px}
+.qitem .qtext .num{color:var(--amber);font-family:'JetBrains Mono';margin-right:8px}
+.qopts{display:flex;flex-direction:column;gap:9px}
+.qopt{display:flex;align-items:center;gap:11px;padding:11px 14px;border:1px solid var(--border);
+  border-radius:10px;cursor:pointer;transition:.15s;font-size:14.5px;background:var(--bg)}
+.qopt:hover{border-color:var(--border2);background:var(--bg3)}
+.qopt .marker{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:11px;transition:.15s}
+.qopt.selected{border-color:var(--amber);background:rgba(255,180,84,.08)}
+.qopt.selected .marker{border-color:var(--amber);background:var(--amber);color:#0b0f17}
+.qopt.correct{border-color:var(--green);background:rgba(126,231,135,.1)}
+.qopt.correct .marker{border-color:var(--green);background:var(--green);color:#0b0f17}
+.qopt.wrong{border-color:var(--red);background:rgba(255,123,114,.1)}
+.qopt.wrong .marker{border-color:var(--red);background:var(--red);color:#0b0f17}
+.qopt.locked{pointer-events:none;opacity:.95}
+.explain{margin-top:10px;font-size:13.5px;color:var(--dim);background:var(--bg);border:1px solid var(--border);
+  border-left:3px solid var(--cyan);border-radius:8px;padding:10px 13px;display:none}
+.explain.show{display:block}
+.explain b{color:var(--cyan)}
+.quiz-footer{display:flex;align-items:center;gap:14px;margin-top:8px}
+.quiz-result{font-family:'JetBrains Mono';font-size:14px;font-weight:700}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border2);padding:11px 20px}
+.btn-ghost:hover{border-color:var(--amber);color:var(--amber)}
+.btn-cyan{background:var(--cyan);color:#0b0f17;padding:11px 22px}
+.btn-cyan:hover{filter:brightness(1.08);transform:translateY(-2px)}
+
+/* lesson footer nav */
+.lesson-nav{display:flex;justify-content:space-between;gap:14px;margin-top:50px;padding-top:26px;
+  border-top:1px solid var(--border)}
+.ln-btn{flex:1;display:flex;flex-direction:column;gap:3px;padding:15px 18px;border:1px solid var(--border2);
+  border-radius:12px;cursor:pointer;transition:.15s;background:var(--bg2)}
+.ln-btn:hover{border-color:var(--amber);background:var(--bg3)}
+.ln-btn.next{text-align:right;align-items:flex-end}
+.ln-btn .dir{font-family:'JetBrains Mono';font-size:11px;color:var(--dim)}
+.ln-btn .ttl{font-weight:600;font-size:14px;color:var(--text)}
+.ln-btn.empty{opacity:.3;pointer-events:none}
+
+/* ---------- HOME / DASHBOARD ---------- */
+.hero{position:relative;border:1px solid var(--border2);border-radius:18px;padding:40px;overflow:hidden;
+  background:linear-gradient(135deg,#141b27,#0e131c);margin-bottom:30px}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:280px;height:280px;
+  background:radial-gradient(circle,rgba(255,180,84,.18),transparent 70%);pointer-events:none}
+.hero h1{font-size:44px;margin-bottom:12px}
+.hero h1 .g{background:linear-gradient(90deg,var(--amber),var(--cyan));-webkit-background-clip:text;
+  background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--dim);max-width:560px;font-size:16px}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:34px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 22px}
+.stat-card .v{font-family:'Bricolage Grotesque';font-size:34px;font-weight:700;line-height:1}
+.stat-card .v.amber{color:var(--amber)} .stat-card .v.cyan{color:var(--cyan)} .stat-card .v.green{color:var(--green)}
+.stat-card .l{color:var(--dim);font-size:13px;margin-top:6px;font-family:'JetBrains Mono'}
+.path-card{display:flex;align-items:center;gap:18px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:14px;padding:20px 22px;margin-bottom:14px;cursor:pointer;transition:.18s}
+.path-card:hover{border-color:var(--border2);transform:translateX(4px)}
+.path-card .pnum{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-family:'Bricolage Grotesque';font-weight:700;font-size:20px;flex-shrink:0}
+.path-card .pinfo{flex:1;min-width:0}
+.path-card .pinfo h3{margin:0 0 3px;font-size:17px;color:var(--text)}
+.path-card .pinfo p{margin:0;color:var(--dim);font-size:13.5px}
+.path-card .pbar{width:120px;flex-shrink:0}
+.path-card .pbar .bar{margin-top:5px}
+.path-card .pbar .pct{font-family:'JetBrains Mono';font-size:12px;color:var(--dim);text-align:right}
+
+/* ---------- EXAM ---------- */
+.exam-intro{border:1px solid var(--border2);border-radius:16px;padding:34px;background:var(--bg2);text-align:center}
+.exam-intro .big-ic{font-size:46px;margin-bottom:10px}
+.exam-intro h2{margin:0 0 10px;font-size:30px}
+.exam-intro p{color:var(--dim);max-width:480px;margin:0 auto 8px}
+.exam-meta{display:flex;justify-content:center;gap:30px;margin:22px 0 26px;flex-wrap:wrap}
+.exam-meta .m{font-family:'JetBrains Mono';font-size:13px;color:var(--dim)}
+.exam-meta .m b{color:var(--amber);display:block;font-size:22px;font-family:'Bricolage Grotesque'}
+.exam-scorebanner{border-radius:16px;padding:30px;text-align:center;margin-bottom:26px;
+  border:1px solid var(--border2)}
+.exam-scorebanner .grade{font-family:'Bricolage Grotesque';font-size:64px;font-weight:800;line-height:1}
+.exam-scorebanner .msg{font-size:16px;margin-top:6px}
+
+/* ---------- SCOREBOARD ---------- */
+.lb{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--bg2)}
+.lb-row{display:grid;grid-template-columns:60px 1fr 110px 130px;align-items:center;padding:14px 20px;
+  border-bottom:1px solid var(--border);font-size:14.5px}
+.lb-row.head{background:var(--bg3);font-family:'JetBrains Mono';font-size:11px;text-transform:uppercase;
+  letter-spacing:.05em;color:var(--dim)}
+.lb-row:last-child{border-bottom:none}
+.lb-row .rk{font-family:'Bricolage Grotesque';font-weight:700;font-size:18px;color:var(--dim)}
+.lb-row.gold .rk{color:#ffd76a} .lb-row.silver .rk{color:#cdd7e3} .lb-row.bronze .rk{color:#e0975a}
+.lb-row.me{background:rgba(255,180,84,.08)}
+.lb-row.me .nm{color:var(--amber)}
+.lb-row .nm{font-weight:600;display:flex;align-items:center;gap:9px}
+.lb-row .nm .av{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--amber),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0b0f17}
+.lb-row .sc{font-family:'JetBrains Mono';color:var(--green);font-weight:700}
+.lb-row .dt{font-family:'JetBrains Mono';font-size:12px;color:var(--dim)}
+.lb-empty{padding:40px;text-align:center;color:var(--dim)}
+
+.section-title{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.section-title h1{font-size:36px}
+
+@media(max-width:880px){
+  #app{grid-template-columns:1fr}
+  #sidebar{position:fixed;left:0;top:0;z-index:200;width:290px;transform:translateX(-100%);transition:.25s;
+    box-shadow:var(--shadow)}
+  #sidebar.open{transform:translateX(0)}
+  .menu-toggle{display:flex!important}
+  .content,.topbar{padding-left:18px;padding-right:18px}
+  .stat-row{grid-template-columns:1fr}
+  .lb-row{grid-template-columns:44px 1fr 80px;font-size:13px}
+  .lb-row .dt{display:none}
+  .hero h1{font-size:32px}
+  .content h1{font-size:30px}
+}
+.menu-toggle{display:none;width:38px;height:38px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);cursor:pointer;align-items:center;justify-content:center;font-size:18px}
+.backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150}
+.backdrop.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- ===================== ONBOARDING ===================== -->
+<div id="onboard">
+  <div class="ob-card">
+    <div class="ob-badge">●&nbsp; ICT Labo 5ADT · 2025–2026</div>
+    <h1>WebDev <span>Leertraject</span></h1>
+    <p class="sub">Blazor · Web API · JavaScript — uitleg, voorbeelden, oefeningen, quizzen en een examen met scorebord.</p>
+    <div class="prompt-line">&gt; identificeer jezelf voor het scorebord</div>
+    <input id="nickInput" class="ob-input" type="text" placeholder="jouw_nickname" maxlength="18" autocomplete="off" spellcheck="false">
+    <div class="ob-err" id="nickErr"></div>
+    <button class="btn btn-primary" onclick="startApp()">Start het traject →</button>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <div class="backdrop" id="backdrop" onclick="toggleSidebar(false)"></div>
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="side-head">
+      <div class="logo"><span class="dot"></span> WebDev<small>/5ADT</small></div>
+      <div class="user-chip">
+        <div class="avatar" id="sideAvatar">?</div>
+        <div>
+          <div class="nm" id="sideNick">—</div>
+          <div class="pts" id="sidePts">0 XP</div>
+        </div>
+        <button onclick="logout()">wissel</button>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="lbl"><span>Voortgang</span><span id="progTxt">0 / 0</span></div>
+      <div class="bar"><i id="progBar" style="width:0%"></i></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main">
+    <div class="topbar">
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="crumb" id="crumb">Home</div>
+      <div class="right">
+        <div class="mini-stat">XP <b id="topXP">0</b></div>
+        <div class="mini-stat">Rang <b id="topRank">—</b></div>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<script>
+/* =======================================================================
+   DATA — alle leerstof uit de cursus
+   ======================================================================= */
+const COURSE = [
+  /* =================== MODULE 1: BLAZOR =================== */
+  { id:"blazor", title:"Blazor", icon:"⚡", color:"#ffb454",
+    desc:"Interactieve webapps bouwen met C# en Razor componenten.",
+    lessons:[
+      { id:"bl-intro", title:"Wat is Blazor?", body:[
+        {t:"tag",text:"Module 1 · Les 1"},
+        {t:"p",html:"<strong>Blazor</strong> is een webframework van Microsoft binnen het .NET-ecosysteem waarmee je interactieve webapplicaties bouwt met <code>C#</code> in plaats van JavaScript. De gebruikersinterface wordt opgebouwd met <strong>Razor componenten</strong>: een combinatie van HTML (layout) en C# (logica)."},
+        {t:"h",text:"Verschil met klassieke webontwikkeling"},
+        {t:"ul",items:["Je gebruikt <strong>geen of weinig JavaScript</strong>.","Je schrijft zowel front-end als back-end logica in C#.","Je werkt met <strong>componenten</strong> in plaats van losse pagina's."]},
+        {t:"h",text:"Blazor Server vs Blazor WebAssembly"},
+        {t:"p",html:"Er bestaan twee belangrijke varianten. In deze cursus werken we met <strong>Blazor Server</strong>."},
+        {t:"table",head:["","Blazor Server","Blazor WebAssembly"],rows:[
+          ["Waar draait het?","Op de server","In de browser (via WebAssembly)"],
+          ["Verbinding","Live SignalR-verbinding","Werkt grotendeels offline"],
+          ["Voordeel","Snelle opstart, lichte browser","Minder serverbelasting"],
+          ["Nadeel","Internet altijd nodig","Tragere opstart, complexer"]
+        ]},
+        {t:"note",html:"<strong>Onthoud:</strong> bij Blazor Server toont de browser enkel de interface — alle logica draait op de server en wijzigingen komen via een live verbinding (SignalR) binnen."}
+      ], quiz:[
+        {q:"In welke programmeertaal schrijf je een Blazor-applicatie?",opts:["JavaScript","C#","Python","PHP"],a:1,ex:"Blazor laat je toe om webapps te bouwen met C# in plaats van JavaScript."},
+        {q:"Waar draait de logica bij Blazor Server?",opts:["Volledig in de browser","Op de server","In een aparte database","In WebAssembly"],a:1,ex:"Bij Blazor Server draait de app op de server; de browser toont enkel de interface."},
+        {q:"Welke technologie verzorgt de live verbinding bij Blazor Server?",opts:["HTTP polling","SignalR","WebSockets API","AJAX"],a:1,ex:"Communicatie verloopt via een live SignalR-verbinding."},
+        {q:"Een nadeel van Blazor WebAssembly is...",opts:["Constante internetverbinding nodig","Hogere serverbelasting","Tragere opstart","Geen offline gebruik"],a:2,ex:"WebAssembly werkt grotendeels offline maar heeft een tragere opstart en complexere setup."}
+      ]},
+      { id:"bl-struct", title:"Project & structuur", body:[
+        {t:"tag",text:"Module 1 · Les 2"},
+        {t:"p",html:"We werken met <strong>Visual Studio</strong> (niet VS Code). Een nieuw project maak je zo aan:"},
+        {t:"ol",items:["Open Visual Studio → <em>Create a new project</em>","Selecteer <strong>Blazor Server App</strong>","Geef een naam (bv. <code>BlazorIntro</code>)","Kies <strong>.NET 8</strong>","Authenticatie: <strong>None</strong>"]},
+        {t:"h",text:"Belangrijke mappen & bestanden"},
+        {t:"table",head:["Map / bestand","Inhoud"],rows:[
+          ["<code>Pages/</code>","Razor pagina's"],
+          ["<code>Shared/</code>","Herbruikbare componenten (menu, layout)"],
+          ["<code>wwwroot/</code>","CSS, afbeeldingen, statische bestanden"],
+          ["<code>Program.cs</code>","Configuratie van de app"]
+        ]},
+        {t:"note",html:"Elke Razor-pagina eindigt op de extensie <code>.razor</code>."}
+      ], quiz:[
+        {q:"Met welke IDE werken we in deze cursus?",opts:["VS Code","Visual Studio","Rider","Notepad++"],a:1,ex:"De cursus gebruikt expliciet Visual Studio, niet VS Code."},
+        {q:"Welke .NET-versie kies je bij het aanmaken?",opts:[".NET 6",".NET 7",".NET 8",".NET Framework"],a:2,ex:"We kiezen .NET 8 met authenticatie None."},
+        {q:"Waar horen statische bestanden zoals CSS en afbeeldingen?",opts:["Pages/","wwwroot/","Shared/","Program.cs"],a:1,ex:"wwwroot/ bevat CSS, afbeeldingen en andere statische bestanden."},
+        {q:"Op welke extensie eindigt een Razor-pagina?",opts:[".cs",".cshtml",".razor",".blazor"],a:2,ex:"Razor pagina's eindigen op .razor."}
+      ]},
+      { id:"bl-razor", title:"Razor componenten", body:[
+        {t:"tag",text:"Module 1 · Les 3"},
+        {t:"p",html:"Een Razor component bestaat uit <strong>HTML (layout)</strong> en <strong>C# code (logica)</strong> in hetzelfde bestand. De C# komt in een <code>@code</code> blok."},
+        {t:"code",lang:"razor",code:`<h3>Teller</h3>
+<p>Waarde: @count</p>
+<button @onclick="Verhoog">Klik</button>
+
+@code {
+    int count = 0;
+
+    void Verhoog()
+    {
+        count++;
+    }
+}`},
+        {t:"h",text:"Wat gebeurt hier?"},
+        {t:"ul",items:["<code>@count</code> toont een C#-variabele in de HTML.","<code>@onclick</code> koppelt de knop aan de methode <code>Verhoog</code>.","Na het wijzigen van <code>count</code> wordt de pagina <strong>automatisch hertekend</strong>."]},
+        {t:"exercise",title:"Counter.razor",diff:"basis",html:"<p>Maak een nieuwe Razor-pagina <code>Counter.razor</code> met:</p><ul><li>een getal dat getoond wordt</li><li>een knop <strong>+1</strong></li><li>een knop <strong>Reset</strong></li></ul>",
+          sol:{lang:"razor",code:`@page "/counter"
+<h3>Teller</h3>
+<p>Huidige waarde: <strong>@count</strong></p>
+
+<button class="btn btn-primary" @onclick="PlusEen">+1</button>
+<button class="btn btn-secondary" @onclick="Reset">Reset</button>
+
+@code {
+    private int count = 0;
+
+    private void PlusEen() => count++;
+    private void Reset()   => count = 0;
+}`}}
+      ], quiz:[
+        {q:"Wat doet @count in een Razor-component?",opts:["Het maakt een nieuwe variabele","Het toont de waarde van een C#-variabele","Het roept een methode op","Het importeert een namespace"],a:1,ex:"@count toont de waarde van een C#-variabele in de HTML."},
+        {q:"Waarvoor dient @onclick?",opts:["Een variabele tonen","Een knop koppelen aan een methode","Een pagina laden","CSS toevoegen"],a:1,ex:"@onclick koppelt een gebeurtenis (klik) aan een C#-methode."},
+        {q:"Waar plaats je de C#-logica in een Razor-bestand?",opts:["In <script>","In een @code { } blok","In Program.cs","In een aparte .js file"],a:1,ex:"De C#-logica staat in het @code { } blok onderaan de component."},
+        {q:"Wat gebeurt er nadat count++ uitgevoerd is?",opts:["Niets, je moet herladen","De pagina wordt automatisch hertekend","De server crasht","Je moet StateHasChanged altijd handmatig aanroepen"],a:1,ex:"Blazor hertekent de UI automatisch wanneer de state verandert."}
+      ]},
+      { id:"bl-routing", title:"Routing, databinding & formulieren", body:[
+        {t:"tag",text:"Module 1 · Les 4"},
+        {t:"h",text:"Routing & Navigatie"},
+        {t:"p",html:"Routing bepaalt <strong>welke pagina getoond wordt bij welke URL</strong>. Bovenaan een Razor-pagina zet je:"},
+        {t:"code",lang:"razor",code:`@page "/studenten"`},
+        {t:"p",html:"Navigeren doe je met <code>NavLink</code> (pas dit aan in <code>NavMenu.razor</code>):"},
+        {t:"code",lang:"razor",code:`<NavLink href="/studenten">Studenten</NavLink>`},
+        {t:"h",text:"Databinding"},
+        {t:"p",html:"Databinding koppelt een invoerveld automatisch aan een variabele. Elke wijziging in het veld wordt meteen zichtbaar."},
+        {t:"code",lang:"razor",code:`<input @bind="naam" />
+<p>Hallo @naam</p>
+
+@code {
+    string naam;
+}`},
+        {t:"h",text:"Formulieren met EditForm"},
+        {t:"p",html:"Blazor gebruikt <code>EditForm</code> voor formulieren. Deze kunnen uitgebreid worden met validatie."},
+        {t:"code",lang:"razor",code:`<EditForm Model="student" OnValidSubmit="Opslaan">
+    <InputText @bind-Value="student.Naam" />
+    <button type="submit">Opslaan</button>
+</EditForm>`},
+        {t:"note",html:"<strong>@bind</strong> wordt op gewone HTML-elementen gebruikt; <strong>@bind-Value</strong> op Blazor-inputcomponenten zoals <code>InputText</code>."}
+      ], quiz:[
+        {q:"Hoe stel je de URL van een Razor-pagina in?",opts:["@route '/x'","@page \"/x\"","@url(\"/x\")","[Route(\"/x\")]"],a:1,ex:"Bovenaan de pagina gebruik je @page \"/url\"."},
+        {q:"Welk element gebruik je voor navigatie in het menu?",opts:["<a>","<NavLink>","<Link>","<Route>"],a:1,ex:"Navigatie gebeurt via <NavLink href=\"...\">."},
+        {q:"Wat koppelt een invoerveld automatisch aan een variabele?",opts:["@onclick","@bind","@page","@code"],a:1,ex:"@bind zorgt voor two-way databinding tussen veld en variabele."},
+        {q:"Welk component gebruikt Blazor voor formulieren?",opts:["<form>","<EditForm>","<BlazorForm>","<InputForm>"],a:1,ex:"Blazor gebruikt <EditForm Model=... OnValidSubmit=...>."}
+      ]},
+      { id:"bl-crud", title:"Het CRUD-principe", body:[
+        {t:"tag",text:"Module 1 · Les 5"},
+        {t:"p",html:"<strong>CRUD</strong> vormt de basis van bijna elke applicatie. Het staat voor de vier basisoperaties op data:"},
+        {t:"table",head:["Letter","Operatie","Betekenis"],rows:[
+          ["C","Create","Nieuwe data toevoegen"],
+          ["R","Read","Data lezen / opvragen"],
+          ["U","Update","Bestaande data aanpassen"],
+          ["D","Delete","Data verwijderen"]
+        ]},
+        {t:"exercise",title:"Lijst van objecten",diff:"basis",html:"<p>Maak een eenvoudige lijst van objecten (bv. <em>Studenten</em> of <em>Producten</em>):</p><ul><li>een object met minstens 2 eigenschappen</li><li>de objecten tonen in een lijst</li><li>een item toevoegen via een formulier</li></ul>",
+          sol:{lang:"razor",code:`@page "/studenten"
+
+<h3>Studenten</h3>
+
+<ul>
+    @foreach (var s in studenten)
+    {
+        <li>@s.Naam — @s.Klas</li>
+    }
+</ul>
+
+<input @bind="nieuwNaam" placeholder="Naam" />
+<input @bind="nieuwKlas" placeholder="Klas" />
+<button @onclick="Toevoegen">Toevoegen</button>
+
+@code {
+    class Student { public string Naam {get;set;} public string Klas {get;set;} }
+
+    List<Student> studenten = new();
+    string nieuwNaam = "";
+    string nieuwKlas = "";
+
+    void Toevoegen()
+    {
+        studenten.Add(new Student { Naam = nieuwNaam, Klas = nieuwKlas });
+        nieuwNaam = ""; nieuwKlas = "";
+    }
+}`}}
+      ], quiz:[
+        {q:"Waar staat CRUD voor?",opts:["Copy, Read, Update, Delete","Create, Read, Update, Delete","Create, Run, Use, Deploy","Connect, Read, Use, Delete"],a:1,ex:"Create, Read, Update, Delete."},
+        {q:"Welke CRUD-operatie hoort bij 'productprijs wijzigen'?",opts:["Create","Read","Update","Delete"],a:2,ex:"Bestaande data aanpassen = Update."},
+        {q:"Welke operatie gebruik je om producten te bekijken?",opts:["Create","Read","Update","Delete"],a:1,ex:"Data opvragen/lezen = Read."}
+      ]},
+      { id:"bl-advanced", title:"Advanced: componenten & modal", body:[
+        {t:"tag",text:"Module 1 · Les 6"},
+        {t:"p",html:"We bouwen een productpagina zoals Bol.com: de admin kan producten toevoegen en bekijken. Eerst het <strong>model</strong>:"},
+        {t:"code",lang:"csharp",code:`namespace JouwProjectNaam.Models
+{
+    public class Product
+    {
+        public string Naam { get; set; }
+        public string Beschrijving { get; set; }
+        public decimal Prijs { get; set; }
+    }
+}`},
+        {t:"h",text:"Herbruikbare ProductCard-component"},
+        {t:"p",html:"Een component die één product toont. <code>[Parameter]</code> betekent dat de data <strong>van buitenaf</strong> komt."},
+        {t:"code",lang:"razor",code:`@using JouwProjectNaam.Models
+
+<div class="card h-100">
+    <div class="card-body">
+        <h5 class="card-title">@Product.Naam</h5>
+        <p class="card-text">@Product.Beschrijving</p>
+    </div>
+    <div class="card-footer fw-bold">€ @Product.Prijs</div>
+</div>
+
+@code {
+    [Parameter]
+    public Product Product { get; set; }
+}`},
+        {t:"h",text:"Productenpagina met grid"},
+        {t:"code",lang:"razor",code:`@page "/producten"
+@using JouwProjectNaam.Models
+
+<h1>Onze producten</h1>
+<button class="btn btn-primary" @onclick="OpenModal">+ Product toevoegen</button>
+
+<div class="row g-3">
+    @foreach (var product in Producten)
+    {
+        <div class="col-sm-6 col-md-4 col-lg-3">
+            <ProductCard Product="product" />
+        </div>
+    }
+</div>`},
+        {t:"h",text:"De modal — popup zonder JavaScript"},
+        {t:"p",html:"De modal wordt getoond via <code>@if</code>. Bootstrap zorgt voor de styling, maar er is <strong>geen JavaScript en geen data-bs-*</strong> nodig: Blazor bepaalt alles."},
+        {t:"code",lang:"razor",code:`@if (IsModalOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header">
+            <h5>Nieuw product</h5>
+            <button class="btn-close" @onclick="CloseModal"></button>
+        </div>
+        <div class="modal-body">
+            <input class="form-control" @bind="NieuwProduct.Naam" />
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" @onclick="CloseModal">Annuleren</button>
+            <button class="btn btn-success" @onclick="AddProduct">Opslaan</button>
+        </div>
+      </div></div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}`},
+        {t:"h",text:"Code-behind"},
+        {t:"code",lang:"csharp",code:`@code {
+    private List<Product> Producten = new()
+    {
+        new() { Naam = "Laptop", Beschrijving = "Snelle laptop", Prijs = 999.99m },
+        new() { Naam = "Muis",   Beschrijving = "Draadloos",     Prijs = 29.95m }
+    };
+
+    private bool IsModalOpen = false;
+    private Product NieuwProduct = new();
+
+    private void OpenModal()  { NieuwProduct = new Product(); IsModalOpen = true; }
+    private void CloseModal() { IsModalOpen = false; }
+    private void AddProduct() { Producten.Add(NieuwProduct); IsModalOpen = false; }
+}`},
+        {t:"note",html:"<strong>Kernidee:</strong> de <em>state</em> (zoals <code>IsModalOpen</code> en <code>Producten</code>) is de single source of truth. Blazor re-rendert automatisch — je hoeft <strong>nooit zelf de DOM te manipuleren</strong>."}
+      ], quiz:[
+        {q:"Wat betekent het attribuut [Parameter] op een property?",opts:["De waarde komt van een database","De data komt van buitenaf (parent component)","Het is een verplichte parameter","Het maakt de property privé"],a:1,ex:"[Parameter] geeft aan dat de data van buitenaf (de ouder-component) wordt doorgegeven."},
+        {q:"Hoe wordt de modal getoond/verborgen?",opts:["Met JavaScript","Met data-bs-toggle","Met een @if op een bool in de state","Met CSS display:none manueel"],a:2,ex:"De modal verschijnt via @if (IsModalOpen) — puur op basis van de Blazor-state."},
+        {q:"Welk datatype gebruik je voor de prijs in het Product-model?",opts:["int","double","decimal","float"],a:2,ex:"Voor geldbedragen gebruik je decimal (let op de m-suffix: 999.99m)."},
+        {q:"Waarom hoef je in Blazor de DOM niet zelf te manipuleren?",opts:["Omdat dat verboden is","Omdat Blazor automatisch re-rendert op basis van de state","Omdat JavaScript dat doet","Omdat de server de HTML cachet"],a:1,ex:"State = single source of truth; Blazor hertekent de UI automatisch."}
+      ]}
+    ]},
+
+  /* =================== MODULE 2: WEB API =================== */
+  { id:"api", title:"Web API", icon:"🔌", color:"#5ad6e0",
+    desc:"Communiceren via HTTP met C# en ASP.NET Core.",
+    lessons:[
+      { id:"api-intro", title:"Wat is een Web API?", body:[
+        {t:"tag",text:"Module 2 · Les 1"},
+        {t:"p",html:"Een <strong>Web API (Application Programming Interface)</strong> is een interface waarmee een applicatie via het internet kan communiceren met een andere applicatie. In .NET bouw je die met <code>C#</code> en <strong>ASP.NET Core</strong>."},
+        {t:"p",html:"De Web API hoort bij de <strong>back-end</strong>: die bevat de logica en verzorgt de communicatie met de database. De <strong>front-end</strong> (de gebruikersinterface) stuurt verzoeken naar de API."},
+        {t:"h",text:"Soorten front-ends"},
+        {t:"ul",items:["een webapplicatie (zoals een Blazor app)","een mobiele app","een JavaScript-website","een desktop-applicatie"]},
+        {t:"h",text:"Duidelijke scheiding"},
+        {t:"table",head:["Laag","Rol"],rows:[
+          ["Front-end (WebApp)","Gebruikersinterface"],
+          ["Back-end (Web API)","Logica en verwerking"],
+          ["Database","Opslag van gegevens"]
+        ]},
+        {t:"code",lang:"text",code:`WebApp (Front-end)
+        |
+        |  HTTP Request
+        v
+Web API (Back-end)
+        |
+        |  Query
+        v
+   Database`},
+        {t:"note",html:"De Web API fungeert dus als een <strong>tussenlaag</strong> tussen de gebruiker en de database."}
+      ], quiz:[
+        {q:"Waar staat API voor?",opts:["Applied Programming Interface","Application Programming Interface","Automatic Program Integration","App Process Interface"],a:1,ex:"Application Programming Interface."},
+        {q:"Bij welke laag hoort een Web API?",opts:["Front-end","Back-end","Database","Presentatie"],a:1,ex:"De Web API hoort bij de back-end (logica + databasecommunicatie)."},
+        {q:"Met welk framework bouw je een Web API in .NET?",opts:["Entity Framework","ASP.NET Core","Blazor WebAssembly","SignalR"],a:1,ex:"Web API's bouw je met C# en ASP.NET Core."},
+        {q:"Wat is de rol van de Web API in het schema?",opts:["De UI tekenen","Een tussenlaag tussen gebruiker en database","Data permanent opslaan","CSS aanleveren"],a:1,ex:"De API is de tussenlaag tussen de front-end en de database."}
+      ]},
+      { id:"api-http", title:"CRUD & HTTP-methoden", body:[
+        {t:"tag",text:"Module 2 · Les 2"},
+        {t:"p",html:"Communicatie met een Web API verloopt via het <strong>HTTP-protocol</strong> — hetzelfde protocol dat browsers gebruiken. De CRUD-operaties worden gekoppeld aan HTTP-methoden:"},
+        {t:"table",head:["HTTP-methode","CRUD","Betekenis"],rows:[
+          ["<code>POST</code>","Create","Nieuwe data toevoegen"],
+          ["<code>GET</code>","Read","Data opvragen"],
+          ["<code>PUT</code>","Update","Bestaande data aanpassen"],
+          ["<code>DELETE</code>","Delete","Data verwijderen"]
+        ]},
+        {t:"h",text:"Voorbeelden van requests"},
+        {t:"table",head:["Request","Betekenis"],rows:[
+          ["<code>GET /api/products</code>","Alle producten opvragen"],
+          ["<code>GET /api/products/5</code>","Product met ID 5 opvragen"],
+          ["<code>POST /api/products</code>","Nieuw product toevoegen"],
+          ["<code>PUT /api/products/5</code>","Product 5 aanpassen"],
+          ["<code>DELETE /api/products/5</code>","Product 5 verwijderen"]
+        ]},
+        {t:"note",html:"Elke request wordt verwerkt door een <strong>controller</strong> die de juiste actie uitvoert."}
+      ], quiz:[
+        {q:"Welke HTTP-methode hoort bij Create?",opts:["GET","POST","PUT","DELETE"],a:1,ex:"POST = nieuwe data toevoegen = Create."},
+        {q:"Wat doet GET /api/products/5 ?",opts:["Alle producten opvragen","Product 5 verwijderen","Product 5 opvragen","Product 5 aanpassen"],a:2,ex:"GET met een id haalt één specifiek item op."},
+        {q:"Welke methode gebruik je om bestaande data aan te passen?",opts:["POST","GET","PUT","PATCH"],a:2,ex:"PUT = Update = bestaande data aanpassen."},
+        {q:"Via welk protocol communiceert de front-end met de API?",opts:["FTP","SMTP","HTTP","SSH"],a:2,ex:"Communicatie verloopt via het HTTP-protocol."}
+      ]},
+      { id:"api-backend", title:"De back-end & voordelen", body:[
+        {t:"tag",text:"Module 2 · Les 3"},
+        {t:"p",html:"Een moderne back-end bestaat meestal uit meerdere onderdelen:"},
+        {t:"ol",items:["<strong>Web API</strong> — ontvangt verzoeken en bepaalt welke actie moet gebeuren (data ophalen/opslaan, validatie, business logic).","<strong>Services / Business Logic</strong> — de regels van de app (bv. prijs mag niet negatief zijn, gebruiker moet ingelogd zijn).","<strong>Database</strong> — bewaart alle gegevens (gebruikers, producten, bestellingen…)."]},
+        {t:"note",html:"In .NET-projecten gebeurt de communicatie met de database vaak via <strong>Entity Framework Core</strong>."},
+        {t:"h",text:"Samenwerking: een actie van stap tot stap"},
+        {t:"ol",items:["Gebruiker klikt op \"Product toevoegen\".","Front-end stuurt een HTTP-request: <code>POST /api/products</code>.","De API ontvangt de gegevens, controleert ze en stuurt ze naar de database.","De database slaat de data op.","De API stuurt een response terug.","De front-end toont het resultaat: \"Product succesvol toegevoegd\"."]},
+        {t:"h",text:"Waarom Web API's gebruiken?"},
+        {t:"table",head:["Voordeel","Uitleg"],rows:[
+          ["Scheiding","UI en logica los van elkaar → beter onderhoudbaar"],
+          ["Herbruikbaarheid","Dezelfde API voor webapp, mobiele app én externe partner"],
+          ["Schaalbaarheid","Onderdelen kunnen onafhankelijk uitgebreid worden"],
+          ["Veiligheid","De API controleert wie toegang heeft tot welke data"]
+        ]}
+      ], quiz:[
+        {q:"Welk onderdeel bevat de regels zoals 'prijs mag niet negatief zijn'?",opts:["De controller","Services / Business Logic","De database","De front-end"],a:1,ex:"Business logic / services bevat de regels van de applicatie."},
+        {q:"Waarmee communiceert .NET vaak met de database?",opts:["SignalR","Entity Framework Core","Razor","WebAssembly"],a:1,ex:"De databasecommunicatie verloopt vaak via Entity Framework Core."},
+        {q:"Wat is GEEN voordeel van een Web API?",opts:["Herbruikbaarheid","Schaalbaarheid","Tragere ontwikkeling","Veiligheid"],a:2,ex:"Tragere ontwikkeling is geen voordeel — API's bieden net scheiding, herbruikbaarheid, schaalbaarheid en veiligheid."},
+        {q:"Wat is de laatste stap wanneer een gebruiker een actie uitvoert?",opts:["De database slaat op","De API stuurt een request","De front-end toont het resultaat","De controller valideert"],a:2,ex:"Stap 6: de front-end toont het resultaat aan de gebruiker."}
+      ]},
+      { id:"api-build", title:"Een eigen API bouwen", body:[
+        {t:"tag",text:"Module 2 · Les 4"},
+        {t:"p",html:"We maken een <strong>ASP.NET Core Web API</strong> (.NET 8, <em>Use Controllers</em> aan, <em>Authentication</em> None). Eerst het model in een map <code>Models</code>:"},
+        {t:"code",lang:"csharp",code:`namespace VoorbeeldWebAPI.Models
+{
+    public class Leerling
+    {
+        public int Id { get; set; }
+        public string Voornaam { get; set; }
+        public string Achternaam { get; set; }
+        public int Leeftijd { get; set; }
+    }
+}`},
+        {t:"h",text:"De controller"},
+        {t:"p",html:"Voeg een <em>API Controller - Empty</em> toe, genaamd <code>LeerlingController</code>:"},
+        {t:"code",lang:"csharp",code:`using Microsoft.AspNetCore.Mvc;
+using VoorbeeldWebAPI.Models;
+
+namespace VoorbeeldWebAPI.Controllers
+{
+    [ApiController]
+    [Route("[controller]")]
+    public class LeerlingController : ControllerBase
+    {
+        private static List<Leerling> database = new List<Leerling>
+        {
+            new Leerling { Id = 1, Voornaam = "Jan",  Achternaam = "Jansen",   Leeftijd = 18 },
+            new Leerling { Id = 2, Voornaam = "Emma", Achternaam = "Peeters",  Leeftijd = 17 },
+            new Leerling { Id = 3, Voornaam = "Noah", Achternaam = "De Smet",  Leeftijd = 19 },
+            new Leerling { Id = 4, Voornaam = "Mila", Achternaam = "Vermeulen",Leeftijd = 18 },
+            new Leerling { Id = 5, Voornaam = "Liam", Achternaam = "Janssens", Leeftijd = 17 }
+        };
+    }
+}`},
+        {t:"table",head:["Onderdeel","Betekenis"],rows:[
+          ["<code>[ApiController]</code>","Geeft aan dat dit een Web API controller is"],
+          ["<code>[Route(\"[controller]\")]</code>","De URL wordt gebaseerd op de controllernaam → <code>/Leerling</code>"]
+        ]},
+        {t:"note",html:"De <code>static</code> lijst blijft in het geheugen bestaan zolang de API draait."}
+      ], quiz:[
+        {q:"Welk attribuut markeert een klasse als Web API controller?",opts:["[Controller]","[ApiController]","[HttpController]","[Route]"],a:1,ex:"[ApiController] geeft aan dat de klasse een Web API controller is."},
+        {q:"Wat wordt de URL met [Route(\"[controller]\")] voor LeerlingController?",opts:["/api","/LeerlingController","/Leerling","/controller"],a:2,ex:"De URL is gebaseerd op de controllernaam zonder 'Controller' → /Leerling."},
+        {q:"Waarom is de lijst static?",opts:["Voor de snelheid","Zodat ze in het geheugen blijft bestaan zolang de API draait","Omdat het verplicht is","Om geheugen te besparen"],a:1,ex:"De static lijst blijft in het geheugen zolang de API draait (een in-memory 'database')."},
+        {q:"Van welke klasse erft een API-controller?",opts:["Controller","ControllerBase","ApiBase","HttpBase"],a:1,ex:"Een API-controller erft van ControllerBase."}
+      ]},
+      { id:"api-endpoints", title:"CRUD-endpoints", body:[
+        {t:"tag",text:"Module 2 · Les 5"},
+        {t:"p",html:"Nu voegen we de endpoints toe in de controller, één per CRUD-operatie."},
+        {t:"h",text:"GET — alle leerlingen (Read)"},
+        {t:"code",lang:"csharp",code:`[HttpGet]
+public IActionResult GetAll()
+{
+    return Ok(database);
+}`},
+        {t:"table",head:["Code","Betekenis"],rows:[
+          ["<code>[HttpGet]</code>","Reageert op GET-requests"],
+          ["<code>Ok(...)</code>","Geeft HTTP-status 200 terug"],
+          ["<code>database</code>","De lijst wordt als JSON teruggestuurd"]
+        ]},
+        {t:"h",text:"GET met filter — één leerling op ID"},
+        {t:"code",lang:"csharp",code:`[HttpGet("{id}")]
+public IActionResult GetById(int id)
+{
+    var leerling = database.FirstOrDefault(l => l.Id == id);
+
+    if (leerling == null)
+        return NotFound("Leerling niet gevonden");
+
+    return Ok(leerling);
+}`},
+        {t:"h",text:"POST — toevoegen (Create)"},
+        {t:"code",lang:"csharp",code:`[HttpPost]
+public IActionResult AddLeerling([FromBody] Leerling nieuweLeerling)
+{
+    if (nieuweLeerling == null)
+        return BadRequest("Ongeldige leerling");
+
+    // Nieuwe Id genereren
+    int nieuwId = database.Max(l => l.Id) + 1;
+    nieuweLeerling.Id = nieuwId;
+
+    database.Add(nieuweLeerling);
+
+    return CreatedAtAction(
+        nameof(GetById),
+        new { id = nieuweLeerling.Id },
+        nieuweLeerling);
+}`},
+        {t:"h",text:"PUT — aanpassen (Update)"},
+        {t:"code",lang:"csharp",code:`[HttpPut("{id}")]
+public IActionResult UpdateLeerling(int id, [FromBody] Leerling updatedLeerling)
+{
+    if (updatedLeerling == null)
+        return BadRequest("Ongeldige leerling");
+
+    var leerling = database.FirstOrDefault(l => l.Id == id);
+
+    if (leerling == null)
+        return NotFound("Leerling niet gevonden");
+
+    leerling.Voornaam   = updatedLeerling.Voornaam;
+    leerling.Achternaam = updatedLeerling.Achternaam;
+    leerling.Leeftijd   = updatedLeerling.Leeftijd;
+
+    return Ok(leerling);
+}`},
+        {t:"h",text:"DELETE — verwijderen (Delete)"},
+        {t:"code",lang:"csharp",code:`[HttpDelete("{id}")]
+public IActionResult DeleteLeerling(int id)
+{
+    var leerling = database.FirstOrDefault(l => l.Id == id);
+
+    if (leerling == null)
+        return NotFound("Leerling niet gevonden");
+
+    database.Remove(leerling);
+
+    return Ok("Leerling verwijderd");
+}`},
+        {t:"exercise",title:"Uitbreiding: Product-API",diff:"gevorderd",html:"<p>Bouw zelf een volledige <code>ProductController</code> met dezelfde structuur:</p><ul><li>model <code>Product</code> (Id, Naam, Prijs, Voorraad)</li><li>GET all + GET by id</li><li>POST met validatie: <strong>prijs mag niet negatief zijn</strong> → <code>BadRequest</code></li><li>PUT en DELETE</li></ul>",
+          sol:{lang:"csharp",code:`[HttpPost]
+public IActionResult AddProduct([FromBody] Product p)
+{
+    if (p == null) return BadRequest("Ongeldig product");
+    if (p.Prijs < 0) return BadRequest("Prijs mag niet negatief zijn");
+
+    p.Id = database.Count == 0 ? 1 : database.Max(x => x.Id) + 1;
+    database.Add(p);
+    return CreatedAtAction(nameof(GetById), new { id = p.Id }, p);
+}`}}
+      ], quiz:[
+        {q:"Welke methode geeft HTTP-status 200 terug?",opts:["NotFound()","BadRequest()","Ok()","Created()"],a:2,ex:"Ok(...) geeft status 200 terug, eventueel met data als JSON."},
+        {q:"Wat doet [HttpGet(\"{id}\")] ?",opts:["Alle items ophalen","Eén item op basis van een id-parameter ophalen","Een item verwijderen","Een item aanmaken"],a:1,ex:"De {id} in de route maakt er een filter-endpoint van."},
+        {q:"Welk attribuut zorgt dat data uit de request-body komt?",opts:["[FromQuery]","[FromBody]","[FromRoute]","[Body]"],a:1,ex:"[FromBody] leest het object uit de body van de POST/PUT-request."},
+        {q:"Wat geeft je terug als een leerling niet bestaat?",opts:["Ok()","BadRequest()","NotFound()","Created()"],a:2,ex:"NotFound() geeft status 404 terug wanneer het item niet bestaat."},
+        {q:"Hoe genereer je in de POST een nieuw uniek Id?",opts:["Random getal","database.Max(l => l.Id) + 1","database.Count","Altijd 0"],a:1,ex:"Het hoogste bestaande Id + 1 (database.Max(l => l.Id) + 1)."}
+      ]}
+    ]},
+
+  /* =================== MODULE 3: JS BASIS =================== */
+  { id:"jsbasis", title:"JavaScript — Basis", icon:"⬡", color:"#f7df1e",
+    desc:"Variabelen, datatypes, operators, beslissingen en functies.",
+    lessons:[
+      { id:"js-intro", title:"Inleiding & console.log", body:[
+        {t:"tag",text:"Module 3 · Les 1"},
+        {t:"p",html:"HTML = structuur, CSS = opmaak, en <strong>JavaScript = gedrag en interactiviteit</strong>. JavaScript draait in de browser en laat je toe te reageren op acties van de gebruiker."},
+        {t:"table",head:["Technologie","Functie"],rows:[
+          ["HTML","Structuur van de pagina"],
+          ["CSS","Opmaak en layout"],
+          ["JavaScript","Gedrag en interactiviteit"]
+        ]},
+        {t:"h",text:"Je eerste code: console.log()"},
+        {t:"code",lang:"javascript",code:`console.log("Hallo wereld");`},
+        {t:"ul",items:["<code>console</code> verwijst naar de ontwikkelaarsconsole van de browser","<code>log()</code> toont een bericht","de tekst tussen aanhalingstekens verschijnt in de console"]},
+        {t:"h",text:"JavaScript toevoegen aan een HTML-pagina"},
+        {t:"code",lang:"html",code:`<!DOCTYPE html>
+<html>
+<head><title>JavaScript test</title></head>
+<body>
+
+<script>
+console.log("Hallo wereld");
+</script>
+
+</body>
+</html>`},
+        {t:"note",html:"Je ziet niets op de pagina zelf — de tekst verschijnt in de <strong>console (F12)</strong>."}
+      ], quiz:[
+        {q:"Wat is de functie van JavaScript?",opts:["Structuur","Opmaak","Gedrag en interactiviteit","Databaseopslag"],a:2,ex:"HTML=structuur, CSS=opmaak, JS=gedrag/interactiviteit."},
+        {q:"Hoe toon je een bericht in de console?",opts:["print(\"x\")","console.log(\"x\")","echo \"x\"","alert.log(\"x\")"],a:1,ex:"console.log() toont een bericht in de browserconsole."},
+        {q:"Waar zie je de output van console.log()?",opts:["Op de pagina","In de console (F12)","In een popup","In de URL"],a:1,ex:"De output verschijnt in de developer console, te openen met F12."},
+        {q:"Welke tag gebruik je om JS in een HTML-pagina te zetten?",opts:["<js>","<script>","<javascript>","<code>"],a:1,ex:"Je plaatst JavaScript binnen een <script>-tag."}
+      ]},
+      { id:"js-var", title:"Variabelen", body:[
+        {t:"tag",text:"Module 3 · Les 2"},
+        {t:"p",html:"Een variabele is als een <strong>doosje met een naam</strong> waarin je een waarde bewaart. In JavaScript maak je er een aan met het sleutelwoord <code>let</code>."},
+        {t:"code",lang:"javascript",code:`let naam = "Emma";
+let leeftijd = 17;
+
+console.log(naam);          // Emma
+console.log("Hallo " + naam); // Hallo Emma`},
+        {t:"h",text:"Variabelen aanpassen"},
+        {t:"code",lang:"javascript",code:`let score = 10;
+score = 20;
+console.log(score); // 20`},
+        {t:"p",html:"De oude waarde wordt dus vervangen door de nieuwe."},
+        {t:"h",text:"Regels voor namen"},
+        {t:"ul",items:["geen spaties","mag niet beginnen met een cijfer","gebruik duidelijke namen"]},
+        {t:"table",head:["Goed","Slecht"],rows:[
+          ["<code>let leeftijd = 16;</code>","<code>let x = 16;</code>"],
+          ["<code>let totaalPrijs = 45;</code>","<code>let a = \"Lucas\";</code>"],
+          ["<code>let studentNaam = \"Lucas\";</code>",""]
+        ]},
+        {t:"exercise",title:"Profielscript",diff:"basis",html:"<p>Maak een script met variabelen voor je <strong>naam</strong>, <strong>leeftijd</strong> en <strong>favoriete game</strong>, en toon ze met <code>console.log()</code>.</p>",
+          sol:{lang:"javascript",code:`let naam = "Thomas";
+let leeftijd = 17;
+let game = "Minecraft";
+
+console.log("Naam: " + naam);
+console.log("Leeftijd: " + leeftijd);
+console.log("Favoriete game: " + game);`}}
+      ], quiz:[
+        {q:"Met welk sleutelwoord maak je meestal een variabele?",opts:["var","let","make","new"],a:1,ex:"In moderne JS gebruik je meestal let."},
+        {q:"Welke variabelenaam is GELDIG?",opts:["let 1naam = ...","let mijn naam = ...","let studentNaam = ...","let class = ..."],a:2,ex:"Namen mogen geen spaties bevatten en niet met een cijfer beginnen; studentNaam is correct."},
+        {q:"Wat is de output? let score = 10; score = 20; console.log(score);",opts:["10","20","30","undefined"],a:1,ex:"De oude waarde 10 wordt vervangen door 20."},
+        {q:"Wat is een slechte praktijk bij naamgeving?",opts:["Duidelijke namen","camelCase gebruiken","Eén-letter namen zoals x of a","Beschrijvende namen"],a:2,ex:"Gebruik duidelijke namen, geen vage zoals x of a."}
+      ]},
+      { id:"js-types", title:"Datatypes & typeof", body:[
+        {t:"tag",text:"Module 3 · Les 3"},
+        {t:"p",html:"Een <strong>datatype</strong> bepaalt wat voor soort waarde een variabele bevat. De belangrijkste:"},
+        {t:"table",head:["Datatype","Beschrijving","Voorbeeld"],rows:[
+          ["String","Tekst (tussen aanhalingstekens)","<code>\"Hallo\"</code>"],
+          ["Number","Getallen","<code>25</code> / <code>9.99</code>"],
+          ["Boolean","Waar of niet waar","<code>true</code> / <code>false</code>"]
+        ]},
+        {t:"code",lang:"javascript",code:`let naam = "Lucas";      // String
+let leeftijd = 17;       // Number
+let geslaagd = true;     // Boolean
+
+console.log(5 + 3);      // 8  (berekening met numbers)`},
+        {t:"h",text:"Het datatype controleren met typeof"},
+        {t:"code",lang:"javascript",code:`let naam = "Emma";
+console.log(typeof naam);     // string
+
+let leeftijd = 17;
+console.log(typeof leeftijd); // number`},
+        {t:"exercise",title:"Drie datatypes",diff:"basis",html:"<p>Maak een script met een <strong>string</strong> (je naam), een <strong>number</strong> (je leeftijd) en een <strong>boolean</strong> (programmeer je graag?), en toon alle drie.</p>",
+          sol:{lang:"javascript",code:`let naam = "Emma";
+let leeftijd = 16;
+let programmeertGraag = true;
+
+console.log(naam);
+console.log(leeftijd);
+console.log(programmeertGraag);`}}
+      ], quiz:[
+        {q:"Wat is het datatype van \"Hallo\"?",opts:["Number","String","Boolean","Text"],a:1,ex:"Tekst tussen aanhalingstekens is een String."},
+        {q:"Welke operator toont het datatype van een variabele?",opts:["type()","typeof","datatype","getType()"],a:1,ex:"typeof geeft het datatype terug."},
+        {q:"Welke waarden kan een Boolean hebben?",opts:["0 of 1","ja of nee","true of false","yes of no"],a:2,ex:"Een boolean is true of false."},
+        {q:"Wat is de output? console.log(typeof 17);",opts:["int","number","integer","Number"],a:1,ex:"typeof van een getal geeft \"number\"."}
+      ]},
+      { id:"js-op", title:"Operators", body:[
+        {t:"tag",text:"Module 3 · Les 4"},
+        {t:"h",text:"Rekenkundige operators"},
+        {t:"table",head:["Operator","Betekenis","Voorbeeld","Resultaat"],rows:[
+          ["<code>+</code>","optellen","5 + 3","8"],
+          ["<code>-</code>","aftrekken","5 - 3","2"],
+          ["<code>*</code>","vermenigvuldigen","5 * 3","15"],
+          ["<code>/</code>","delen","10 / 2","5"],
+          ["<code>%</code>","rest van deling","10 % 3","1"]
+        ]},
+        {t:"code",lang:"javascript",code:`let a = 10;
+let b = 3;
+
+console.log(a + b); // 13
+console.log(a % b); // 1`},
+        {t:"h",text:"Tekst combineren (concatenatie)"},
+        {t:"code",lang:"javascript",code:`let voornaam = "Emma";
+let achternaam = "Peeters";
+console.log(voornaam + " " + achternaam); // Emma Peeters`},
+        {t:"h",text:"Verkorte schrijfwijze & verhogen/verlagen"},
+        {t:"table",head:["Operator","Betekenis"],rows:[
+          ["<code>+=</code>","optellen en opslaan"],
+          ["<code>-=</code>","aftrekken en opslaan"],
+          ["<code>++</code>","met 1 verhogen"],
+          ["<code>--</code>","met 1 verlagen"]
+        ]},
+        {t:"code",lang:"javascript",code:`let score = 10;
+score += 5;   // hetzelfde als: score = score + 5
+console.log(score); // 15
+
+let teller = 0;
+teller++;
+console.log(teller); // 1`}
+      ], quiz:[
+        {q:"Wat is het resultaat van 10 % 3?",opts:["3","1","0","3.33"],a:1,ex:"% geeft de rest van de deling; 10 / 3 = 3 rest 1."},
+        {q:"Wat doet de + operator bij twee strings?",opts:["Optellen","Een fout geven","De strings samenvoegen (concatenatie)","Niets"],a:2,ex:"Bij strings voegt + ze samen: concatenatie."},
+        {q:"score += 5 is hetzelfde als...",opts:["score = 5","score = score + 5","score = score * 5","score + 5"],a:1,ex:"+= telt op bij de bestaande waarde en slaat op."},
+        {q:"Wat is de output? let t = 0; t++; console.log(t);",opts:["0","1","2","undefined"],a:1,ex:"++ verhoogt met 1, dus t wordt 1."}
+      ]},
+      { id:"js-if", title:"If-statements", body:[
+        {t:"tag",text:"Module 3 · Les 5"},
+        {t:"p",html:"Met <strong>if-statements</strong> maak je beslissingen. Als de voorwaarde <code>true</code> is, wordt de code uitgevoerd."},
+        {t:"code",lang:"javascript",code:`let leeftijd = 20;
+
+if (leeftijd >= 18) {
+    console.log("Je bent volwassen");
+}`},
+        {t:"h",text:"else gebruiken"},
+        {t:"code",lang:"javascript",code:`let leeftijd = 16;
+
+if (leeftijd >= 18) {
+    console.log("Je bent volwassen");
+} else {
+    console.log("Je bent minderjarig");
+}`},
+        {t:"h",text:"Vergelijkingsoperatoren"},
+        {t:"table",head:["Operator","Betekenis"],rows:[
+          ["<code>==</code>","gelijk aan"],
+          ["<code>===</code>","strikt gelijk (aanbevolen)"],
+          ["<code>!=</code>","niet gelijk"],
+          ["<code>&gt;</code> / <code>&lt;</code>","groter / kleiner dan"],
+          ["<code>&gt;=</code> / <code>&lt;=</code>","groter of gelijk / kleiner of gelijk"]
+        ]},
+        {t:"exercise",title:"Score evalueren",diff:"gevorderd",html:"<p>Maak een script met een variabele <code>score</code>:</p><ul><li>≥ 50 → \"Geslaagd\", anders → \"Niet geslaagd\"</li><li><strong>Extra:</strong> ≥ 80 → \"Uitstekend\"</li></ul>",
+          sol:{lang:"javascript",code:`let score = 84;
+
+if (score >= 80) {
+    console.log("Uitstekend");
+} else if (score >= 50) {
+    console.log("Geslaagd");
+} else {
+    console.log("Niet geslaagd");
+}`}}
+      ], quiz:[
+        {q:"Welke operator is 'strikt gelijk' en aanbevolen?",opts:["=","==","===","!="],a:2,ex:"=== vergelijkt waarde én type en wordt aanbevolen."},
+        {q:"Wat gebeurt er als de voorwaarde false is en er geen else is?",opts:["Een fout","De code in het if-blok wordt overgeslagen","De code draait toch","De pagina herlaadt"],a:1,ex:"Bij false en geen else gebeurt er gewoon niets."},
+        {q:"Welk sleutelwoord gebruik je voor een tweede voorwaarde?",opts:["elseif","else if","elif","otherwise"],a:1,ex:"In JavaScript schrijf je 'else if'."},
+        {q:"Wat betekent !=?",opts:["gelijk aan","niet gelijk","groter dan","strikt gelijk"],a:1,ex:"!= betekent 'niet gelijk aan'."}
+      ]},
+      { id:"js-func", title:"Functies", body:[
+        {t:"tag",text:"Module 3 · Les 6"},
+        {t:"p",html:"Een <strong>functie</strong> is een stukje code dat je later opnieuw kan gebruiken. Zo houd je je code overzichtelijk."},
+        {t:"code",lang:"javascript",code:`function begroet() {
+    console.log("Hallo!");
+}
+
+begroet(); // Hallo!`},
+        {t:"h",text:"Functies met parameters"},
+        {t:"code",lang:"javascript",code:`function begroet(naam) {
+    console.log("Hallo " + naam);
+}
+
+begroet("Thomas"); // Hallo Thomas`},
+        {t:"h",text:"return gebruiken"},
+        {t:"code",lang:"javascript",code:`function som(a, b) {
+    return a + b;
+}
+
+let resultaat = som(5, 3);
+console.log(resultaat); // 8`},
+        {t:"exercise",title:"Leeftijd berekenen",diff:"gevorderd",html:"<p>Maak een functie <code>berekenLeeftijd(geboortejaar)</code> die de leeftijd berekent en <strong>teruggeeft</strong>. Tip: gebruik het huidige jaar.</p>",
+          sol:{lang:"javascript",code:`function berekenLeeftijd(geboortejaar) {
+    let huidigJaar = new Date().getFullYear();
+    return huidigJaar - geboortejaar;
+}
+
+console.log(berekenLeeftijd(2008)); // bv. 18`}}
+      ], quiz:[
+        {q:"Hoe roep je een functie 'begroet' aan?",opts:["call begroet","begroet()","run begroet","function begroet"],a:1,ex:"Je roept een functie aan met haar naam gevolgd door ()."},
+        {q:"Wat doet het sleutelwoord return?",opts:["Een functie stoppen zonder waarde","Een waarde teruggeven uit de functie","Een variabele maken","De console wissen"],a:1,ex:"return geeft een waarde terug uit de functie."},
+        {q:"Wat is een parameter?",opts:["De naam van de functie","Een waarde die je meegeeft aan een functie","De return-waarde","Een lus"],a:1,ex:"Een parameter is een waarde die je aan de functie meegeeft."},
+        {q:"Wat is de output? function som(a,b){return a+b;} console.log(som(5,3));",opts:["53","8","undefined","a+b"],a:1,ex:"som(5,3) geeft 8 terug."}
+      ]}
+    ]},
+
+  /* =================== MODULE 4: JS GEVORDERD =================== */
+  { id:"jsgev", title:"JavaScript — Gevorderd", icon:"◆", color:"#d2a8ff",
+    desc:"Console apps, arrays, loops en DOM-manipulatie.",
+    lessons:[
+      { id:"js-console", title:"Console apps & prompt", body:[
+        {t:"tag",text:"Module 4 · Les 1"},
+        {t:"p",html:"Met <code>prompt()</code> vraag je invoer aan de gebruiker. Met <code>parseInt()</code> zet je tekst om naar een getal."},
+        {t:"code",lang:"javascript",code:`let getal = parseInt(prompt("Geef een getal:"));
+
+if (getal % 2 === 0) {
+    console.log("Het getal is EVEN");
+} else {
+    console.log("Het getal is ONEVEN");
+}`},
+        {t:"h",text:"Externe .js file"},
+        {t:"p",html:"Je code kan ook in een apart bestand staan, dat je inlaadt met <code>src</code>:"},
+        {t:"code",lang:"html",code:`<script src="script.js"></script>`},
+        {t:"exercise",title:"Ticketprijs op leeftijd",diff:"gevorderd",html:"<p>Vraag de leeftijd en bepaal de ticketprijs: &lt;12 → €5, 12–17 → €8, 18–64 → €12, 65+ → €6. Toon <code>Je betaalt: €X</code>.</p>",
+          sol:{lang:"javascript",code:`let leeftijd = parseInt(prompt("Wat is je leeftijd?"));
+let prijs;
+
+if (leeftijd < 12)       prijs = 5;
+else if (leeftijd <= 17) prijs = 8;
+else if (leeftijd <= 64) prijs = 12;
+else                     prijs = 6;
+
+console.log("Je betaalt: €" + prijs);`}}
+      ], quiz:[
+        {q:"Wat doet prompt()?",opts:["Toont een bericht in de console","Vraagt invoer aan de gebruiker","Maakt een variabele","Stopt het programma"],a:1,ex:"prompt() toont een invoervenster en geeft de ingetypte tekst terug."},
+        {q:"Waarom gebruik je parseInt() rond prompt()?",opts:["Voor de snelheid","Om tekst naar een getal om te zetten","Om te valideren","Het is verplicht"],a:1,ex:"prompt() geeft een string terug; parseInt() maakt er een getal van zodat je kan rekenen."},
+        {q:"Hoe controleer je of een getal even is?",opts:["getal / 2 == 0","getal % 2 === 0","getal * 2 === 0","getal === even"],a:1,ex:"Een getal is even als de rest na deling door 2 gelijk is aan 0 (% 2 === 0)."},
+        {q:"Hoe laad je een extern script script.js in?",opts:["<script>script.js</script>","<link src=\"script.js\">","<script src=\"script.js\"></script>","import script.js"],a:2,ex:"<script src=\"script.js\"></script>."}
+      ]},
+      { id:"js-array", title:"Arrays", body:[
+        {t:"tag",text:"Module 4 · Les 2"},
+        {t:"p",html:"Een <strong>array</strong> bewaart meerdere waarden in één variabele. De <strong>index start altijd bij 0</strong>."},
+        {t:"code",lang:"javascript",code:`let namen = ["Jan", "Piet", "Klaas"];
+
+console.log(namen[0]); // Jan
+console.log(namen[1]); // Piet
+console.log(namen[2]); // Klaas`},
+        {t:"h",text:"Waarde wijzigen & toevoegen"},
+        {t:"code",lang:"javascript",code:`let kleuren = ["rood", "groen", "blauw"];
+kleuren[1] = "geel";        // wijzigen
+kleuren[3] = "paars";       // toevoegen op index
+console.log(kleuren);       // ["rood","geel","blauw","paars"]`},
+        {t:"h",text:"Elementen verwijderen"},
+        {t:"table",head:["Methode","Wat verwijdert ze?"],rows:[
+          ["<code>pop()</code>","het laatste element"],
+          ["<code>shift()</code>","het eerste element"],
+          ["<code>splice(start, aantal)</code>","element(en) op een specifieke plaats"]
+        ]},
+        {t:"code",lang:"javascript",code:`let games = ["FIFA", "Minecraft", "Fortnite", "GTA"];
+
+games.pop();          // verwijdert "GTA"
+games.shift();        // verwijdert "FIFA"
+games.splice(0, 1);   // verwijdert vanaf index 0, 1 element`},
+        {t:"exercise",title:"Naam verwijderen via prompt",diff:"gevorderd",html:"<p>Maak een array met 5 namen. Vraag via <code>prompt()</code> welke naam verwijderd moet worden. Tip: zoek de index op met <code>indexOf()</code> en gebruik <code>splice()</code>.</p>",
+          sol:{lang:"javascript",code:`let namen = ["Jan", "Piet", "Klaas", "Emma", "Noah"];
+let teVerwijderen = prompt("Welke naam verwijderen?");
+
+let index = namen.indexOf(teVerwijderen);
+if (index !== -1) {
+    namen.splice(index, 1);
+} else {
+    console.log("Naam niet gevonden");
+}
+console.log(namen);`}}
+      ], quiz:[
+        {q:"Bij welke index start een array?",opts:["0","1","-1","Afhankelijk van de browser"],a:0,ex:"De index van een array start altijd bij 0."},
+        {q:"Welke methode verwijdert het LAATSTE element?",opts:["shift()","pop()","splice()","remove()"],a:1,ex:"pop() verwijdert het laatste element."},
+        {q:"Welke methode verwijdert het EERSTE element?",opts:["shift()","pop()","first()","splice(0)"],a:0,ex:"shift() verwijdert het eerste element."},
+        {q:"Wat doet games.splice(1, 1)?",opts:["Voegt 1 element toe","Verwijdert 1 element vanaf index 1","Verwijdert index 0 en 1","Sorteert de array"],a:1,ex:"splice(start, aantal): vanaf index 1, 1 element verwijderen."}
+      ]},
+      { id:"js-loops", title:"Loops", body:[
+        {t:"tag",text:"Module 4 · Les 3"},
+        {t:"p",html:"Een <strong>loop</strong> herhaalt een stuk code zolang een voorwaarde waar is."},
+        {t:"table",head:["Loop","Gebruik"],rows:[
+          ["<code>for</code>","vast aantal herhalingen"],
+          ["<code>while</code>","herhalen zolang iets waar is"],
+          ["<code>for...of</code>","door arrays lopen"]
+        ]},
+        {t:"h",text:"De for-loop"},
+        {t:"code",lang:"javascript",code:`for (let i = 0; i < 5; i++) {
+    console.log(i);   // 0 1 2 3 4
+}`},
+        {t:"ul",items:["<code>let i = 0</code> → startwaarde","<code>i &lt; 5</code> → voorwaarde","<code>i++</code> → verhoog met 1"]},
+        {t:"h",text:"Optellen met een loop"},
+        {t:"code",lang:"javascript",code:`let totaal = 0;
+for (let i = 1; i <= 5; i++) {
+    totaal += i;
+}
+console.log(totaal); // 15`},
+        {t:"h",text:"De while-loop"},
+        {t:"code",lang:"javascript",code:`let teller = 0;
+while (teller < 5) {
+    console.log(teller);
+    teller++;          // NOOIT vergeten, anders oneindige loop!
+}`},
+        {t:"note",cls:"warn",html:"<strong>Opgelet:</strong> vergeet bij een while-loop nooit de variabele aan te passen, anders blijft hij oneindig lopen."},
+        {t:"h",text:"for...of — door een array lopen"},
+        {t:"code",lang:"javascript",code:`let games = ["Minecraft", "Fortnite", "EA FC"];
+for (let game of games) {
+    console.log(game);
+}`},
+        {t:"exercise",title:"Punten optellen",diff:"gevorderd",html:"<p>Maak een array met punten en tel ze allemaal op met een loop, toon het totaal.</p>",
+          sol:{lang:"javascript",code:`let punten = [10, 15, 8, 12];
+let totaal = 0;
+
+for (let p of punten) {
+    totaal += p;
+}
+console.log("Totaal: " + totaal); // 45`}}
+      ], quiz:[
+        {q:"Welke loop gebruik je bij een vast, gekend aantal herhalingen?",opts:["while","for","do-while","repeat"],a:1,ex:"De for-loop is ideaal als je vooraf weet hoe vaak je herhaalt."},
+        {q:"Wat is het risico bij een while-loop?",opts:["Te traag","Een oneindige loop als je de variabele niet aanpast","Een syntaxfout","Geheugenlek"],a:1,ex:"Vergeet je de variabele aan te passen, dan blijft de loop oneindig draaien."},
+        {q:"Wat toont for(let i=0;i<3;i++) console.log(i); ?",opts:["1 2 3","0 1 2","0 1 2 3","1 2"],a:1,ex:"Start bij 0, zolang i<3 → 0, 1, 2."},
+        {q:"Welke loop is het eenvoudigst om door een array te lopen?",opts:["for...of","while","do-while","loop"],a:0,ex:"for...of loopt direct door de elementen van een array."}
+      ]},
+      { id:"js-dom", title:"DOM-manipulatie", body:[
+        {t:"tag",text:"Module 4 · Les 4"},
+        {t:"p",html:"Met <strong>DOM-manipulatie</strong> pas je HTML-elementen aan terwijl de gebruiker de site gebruikt. DOM staat voor <strong>Document Object Model</strong>: de browser zet de HTML om naar een boomstructuur van elementen."},
+        {t:"h",text:"Element selecteren"},
+        {t:"code",lang:"javascript",code:`// HTML: <h1 id="titel">Welkom</h1>
+let titel = document.getElementById("titel");
+console.log(titel);`},
+        {t:"h",text:"Inhoud & opmaak aanpassen"},
+        {t:"code",lang:"javascript",code:`document.getElementById("tekst").innerHTML = "Nieuwe tekst";
+
+let bericht = document.getElementById("bericht");
+bericht.style.color = "red";
+bericht.style.fontSize = "30px";`},
+        {t:"h",text:"Events"},
+        {t:"p",html:"Een <strong>event</strong> is een actie van de gebruiker (klikken, muisbeweging, typen)."},
+        {t:"code",lang:"html",code:`<button onclick="toonBericht()">Klik mij</button>`},
+        {t:"code",lang:"javascript",code:`function toonBericht() {
+    alert("Knop aangeklikt!");
+}`},
+        {t:"h",text:"Elementen toevoegen & verwijderen"},
+        {t:"code",lang:"javascript",code:`// Toevoegen
+let p = document.createElement("p");
+p.innerHTML = "Nieuw element";
+document.getElementById("container").appendChild(p);
+
+// Verwijderen
+document.getElementById("verwijderMij").remove();`},
+        {t:"h",text:"Praktijkvoorbeeld: teller"},
+        {t:"code",lang:"javascript",code:`// HTML: <h2 id="aantal">0</h2> <button onclick="verhoog()">+1</button>
+let teller = 0;
+function verhoog() {
+    teller++;
+    document.getElementById("aantal").innerHTML = teller;
+}`},
+        {t:"exercise",title:"Dynamische lijst",diff:"uitdaging",html:"<p>Voorzie een invoerveld, een knop 'Toevoegen' en een lege <code>&lt;ul&gt;</code>. Wanneer de gebruiker een naam invoert en op Toevoegen klikt, verschijnt een nieuw lijstitem.</p>",
+          sol:{lang:"javascript",code:`function voegToe() {
+    let veld = document.getElementById("invoer");
+    let naam = veld.value;
+    if (naam === "") return;
+
+    let li = document.createElement("li");
+    li.innerHTML = naam;
+    document.getElementById("lijst").appendChild(li);
+
+    veld.value = ""; // veld leegmaken
+}`}}
+      ], quiz:[
+        {q:"Waar staat DOM voor?",opts:["Data Object Model","Document Object Model","Document Order Map","Dynamic Object Memory"],a:1,ex:"Document Object Model — de boomstructuur van HTML-elementen."},
+        {q:"Hoe selecteer je een element met id 'titel'?",opts:["document.select(\"titel\")","document.getElementById(\"titel\")","document.querySelector(\"titel\")","getElement(\"titel\")"],a:1,ex:"document.getElementById(\"titel\")."},
+        {q:"Waarmee wijzig je de inhoud (tekst/HTML) van een element?",opts:["innerHTML","textColor","value","content"],a:0,ex:"Met .innerHTML wijzig je de inhoud van een element."},
+        {q:"Welke methode maakt een nieuw element aan?",opts:["document.newElement()","document.createElement()","document.addElement()","element.create()"],a:1,ex:"document.createElement(\"p\") maakt een nieuw element; daarna appendChild()."},
+        {q:"Wat is een 'event'?",opts:["Een variabele","Een actie van de gebruiker (bv. een klik)","Een HTML-tag","Een functie zonder naam"],a:1,ex:"Een event is een gebeurtenis/actie van de gebruiker zoals klikken of typen."}
+      ]}
+    ]}
+];
+
+/* =======================================================================
+   EXAMENVRAGEN
+   ======================================================================= */
+const EXAM = [
+  {q:"Welke Blazor-variant gebruiken we in deze cursus?",opts:["Blazor WebAssembly","Blazor Server","Blazor Hybrid","Blazor MAUI"],a:1,ex:"De cursus werkt met Blazor Server (logica op de server, UI via SignalR)."},
+  {q:"Wat toont @count in een Razor-component?",opts:["Een methode","De waarde van een C#-variabele","Een CSS-klasse","Een route"],a:1,ex:"@count toont de waarde van een C#-variabele in de HTML."},
+  {q:"Hoe definieer je de URL van een Razor-pagina?",opts:["@route","@page \"/url\"","[Route]","@url"],a:1,ex:"Bovenaan: @page \"/url\"."},
+  {q:"Wat betekent [Parameter] op een property in een component?",opts:["Verplichte parameter","Data komt van buitenaf (parent)","Privé veld","Database-kolom"],a:1,ex:"[Parameter] geeft aan dat de data van buitenaf doorgegeven wordt."},
+  {q:"Hoe wordt de Bootstrap-modal in de productpagina getoond?",opts:["Met JavaScript","Met data-bs-toggle","Met @if op een bool","Met een aparte library"],a:2,ex:"Puur met Blazor: via @if (IsModalOpen) — geen JS nodig."},
+  {q:"Waar staat CRUD voor?",opts:["Create, Read, Update, Delete","Copy, Run, Use, Deploy","Connect, Read, Use, Delete","Create, Render, Update, Drop"],a:0,ex:"Create, Read, Update, Delete."},
+  {q:"Welke HTTP-methode hoort bij 'data aanpassen'?",opts:["GET","POST","PUT","DELETE"],a:2,ex:"PUT = Update = bestaande data aanpassen."},
+  {q:"Welke HTTP-methode hoort bij 'data opvragen'?",opts:["GET","POST","PUT","DELETE"],a:0,ex:"GET = Read = data opvragen."},
+  {q:"Welk attribuut markeert een Web API controller?",opts:["[Controller]","[ApiController]","[Route]","[HttpGet]"],a:1,ex:"[ApiController]."},
+  {q:"Wat geeft Ok(...) terug in een API?",opts:["Status 404","Status 500","Status 200","Status 201"],a:2,ex:"Ok() geeft HTTP-status 200 (succes) terug."},
+  {q:"Welk attribuut leest een object uit de request-body?",opts:["[FromQuery]","[FromBody]","[FromRoute]","[Body]"],a:1,ex:"[FromBody] leest het object uit de body."},
+  {q:"Waarmee communiceert .NET vaak met de database?",opts:["SignalR","Entity Framework Core","Razor","Bootstrap"],a:1,ex:"Vaak via Entity Framework Core."},
+  {q:"Wat is de functie van JavaScript (vs HTML/CSS)?",opts:["Structuur","Opmaak","Gedrag en interactiviteit","Opslag"],a:2,ex:"JS = gedrag en interactiviteit."},
+  {q:"Met welk sleutelwoord maak je meestal een variabele?",opts:["var","let","def","new"],a:1,ex:"Meestal let."},
+  {q:"Wat is het resultaat van 10 % 3?",opts:["0","1","3","3.33"],a:1,ex:"% is de rest van de deling: 10/3 = 3 rest 1."},
+  {q:"Welke vergelijkingsoperator is 'strikt gelijk' (aanbevolen)?",opts:["=","==","===","!="],a:2,ex:"=== vergelijkt waarde én type."},
+  {q:"Wat doet return in een functie?",opts:["Stopt het script","Geeft een waarde terug","Wist de console","Maakt een loop"],a:1,ex:"return geeft een waarde terug uit de functie."},
+  {q:"Bij welke index begint een array?",opts:["0","1","-1","willekeurig"],a:0,ex:"Arrays starten bij index 0."},
+  {q:"Welke array-methode verwijdert het laatste element?",opts:["shift()","pop()","splice(0)","remove()"],a:1,ex:"pop() verwijdert het laatste element."},
+  {q:"Wat toont for(let i=0;i<3;i++) console.log(i);?",opts:["0 1 2 3","0 1 2","1 2 3","0 1"],a:1,ex:"i van 0 t.e.m. 2 → 0, 1, 2."},
+  {q:"Wat is het grootste risico bij een while-loop?",opts:["Te traag","Oneindige loop","Syntaxfout","Geheugenlek"],a:1,ex:"Een oneindige loop als je de variabele niet aanpast."},
+  {q:"Waar staat DOM voor?",opts:["Document Object Model","Data Object Map","Dynamic Output Model","Document Order Memory"],a:0,ex:"Document Object Model."},
+  {q:"Hoe selecteer je een element met id 'titel'?",opts:["getElement(\"titel\")","document.getElementById(\"titel\")","document.find(\"titel\")","select(\"#titel\")"],a:1,ex:"document.getElementById(\"titel\")."},
+  {q:"Welke methode maakt een nieuw element aan in de DOM?",opts:["createElement()","appendChild()","innerHTML","newNode()"],a:0,ex:"document.createElement(); daarna appendChild() om toe te voegen."},
+  {q:"Wat geeft console.log(typeof true); ?",opts:["bool","boolean","Boolean","true"],a:1,ex:"typeof van true is \"boolean\"."},
+  {q:"Hoe genereer je een nieuw uniek Id in de POST van de Leerling-API?",opts:["Altijd 1","database.Count","Max(l => l.Id) + 1","Random"],a:2,ex:"Het hoogste bestaande Id + 1."}
+];
+
+/* =======================================================================
+   STATE & STORAGE
+   ======================================================================= */
+const LS = {
+  nick:"wd_nick",
+  progress:"wd_progress_",   // + nick → {lessonId:bestScore}
+  board:"wd_leaderboard"
+};
+let state = { nick:null, progress:{}, view:null };
+
+function lessonList(){ const out=[]; COURSE.forEach(m=>m.lessons.forEach(l=>out.push({m,l}))); return out; }
+function totalLessons(){ return lessonList().length; }
+function doneCount(){ return Object.keys(state.progress).length; }
+function totalXP(){ let xp=0; for(const k in state.progress) xp += state.progress[k]; const b=getBoard().find(e=>e.nick===state.nick); if(b&&b.examScore) xp+=b.examScore; return xp; }
+function getBoard(){ try{return JSON.parse(localStorage.getItem(LS.board))||[]}catch(e){return[]} }
+function saveBoard(b){ localStorage.setItem(LS.board, JSON.stringify(b)); }
+function loadProgress(){ try{state.progress=JSON.parse(localStorage.getItem(LS.progress+state.nick))||{}}catch(e){state.progress={}} }
+function saveProgress(){ localStorage.setItem(LS.progress+state.nick, JSON.stringify(state.progress)); }
+function initials(n){ return n.trim().slice(0,2).toUpperCase(); }
+function myRank(){ const b=getBoard().filter(e=>e.examScore!=null).sort((a,b)=>b.examScore-a.examScore); const i=b.findIndex(e=>e.nick===state.nick); return i>=0?"#"+(i+1):"—"; }
+
+/* =======================================================================
+   ONBOARDING
+   ======================================================================= */
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved = localStorage.getItem(LS.nick);
+  document.getElementById('nickInput').addEventListener('keydown',e=>{ if(e.key==='Enter') startApp(); });
+  if(saved){ state.nick=saved; enterApp(); }
+});
+function startApp(){
+  const inp=document.getElementById('nickInput'); const err=document.getElementById('nickErr');
+  const v=inp.value.trim();
+  if(v.length<2){ err.textContent="Minstens 2 tekens."; inp.focus(); return; }
+  if(v.length>18){ err.textContent="Maximaal 18 tekens."; return; }
+  state.nick=v; localStorage.setItem(LS.nick,v); enterApp();
+}
+function enterApp(){
+  loadProgress();
+  document.getElementById('onboard').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('sideNick').textContent=state.nick;
+  document.getElementById('sideAvatar').textContent=initials(state.nick);
+  buildNav(); navigate('home');
+}
+function logout(){
+  localStorage.removeItem(LS.nick);
+  state={nick:null,progress:{},view:null};
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('onboard').classList.remove('hidden');
+  document.getElementById('nickInput').value=''; document.getElementById('nickErr').textContent='';
+  document.getElementById('nickInput').focus();
+}
+
+/* =======================================================================
+   SIDEBAR / NAV
+   ======================================================================= */
+function buildNav(){
+  const nav=document.getElementById('nav'); nav.innerHTML='';
+  const home=el('div','nav-link'); home.dataset.nav='home';
+  home.innerHTML='<span class="ic">⌂</span> Overzicht';
+  home.onclick=()=>navigate('home'); nav.appendChild(home);
+
+  const sec=el('div','nav-sec'); sec.textContent='Leertraject'; nav.appendChild(sec);
+
+  COURSE.forEach(mod=>{
+    const grp=el('div','module-group');
+    const head=el('div','module-head');
+    const ic=el('div','mod-ic'); ic.textContent=mod.icon;
+    ic.style.background=hexA(mod.color,.15); ic.style.color=mod.color;
+    head.appendChild(ic);
+    head.insertAdjacentHTML('beforeend',`<span>${mod.title}</span><span class="chev">▶</span>`);
+    const lessons=el('div','lessons'); lessons.style.display='none';
+    mod.lessons.forEach(les=>{
+      const ll=el('div','lesson-link'); ll.dataset.nav='lesson:'+les.id;
+      const done=state.progress[les.id]!=null;
+      if(done) ll.classList.add('done');
+      ll.innerHTML=`<span class="check">${done?'✓':''}</span><span>${les.title}</span>`;
+      ll.onclick=()=>navigate('lesson:'+les.id);
+      lessons.appendChild(ll);
+    });
+    head.onclick=()=>{ const open=head.classList.toggle('open'); lessons.style.display=open?'block':'none'; };
+    grp.appendChild(head); grp.appendChild(lessons); nav.appendChild(grp);
+  });
+
+  const sec2=el('div','nav-sec'); sec2.textContent='Afsluiten'; nav.appendChild(sec2);
+  const ex=el('div','nav-link'); ex.dataset.nav='exam';
+  ex.innerHTML='<span class="ic">📝</span> Test-examen'; ex.onclick=()=>navigate('exam'); nav.appendChild(ex);
+  const lb=el('div','nav-link'); lb.dataset.nav='board';
+  lb.innerHTML='<span class="ic">🏆</span> Scorebord'; lb.onclick=()=>navigate('board'); nav.appendChild(lb);
+}
+function refreshSidebarState(){
+  document.querySelectorAll('[data-nav]').forEach(n=>n.classList.remove('active'));
+  const active=document.querySelector(`[data-nav="${state.view}"]`);
+  if(active){ active.classList.add('active');
+    const grp=active.closest('.module-group');
+    if(grp){ const head=grp.querySelector('.module-head'); const les=grp.querySelector('.lessons');
+      head.classList.add('open'); les.style.display='block'; } }
+  // progress
+  document.querySelectorAll('.lesson-link').forEach(ll=>{
+    const id=ll.dataset.nav.split(':')[1];
+    if(state.progress[id]!=null){ ll.classList.add('done'); ll.querySelector('.check').textContent='✓'; }
+  });
+  const dc=doneCount(), tl=totalLessons();
+  document.getElementById('progTxt').textContent=`${dc} / ${tl}`;
+  document.getElementById('progBar').style.width=(tl?Math.round(dc/tl*100):0)+'%';
+  document.getElementById('sidePts').textContent=totalXP()+' XP';
+  document.getElementById('topXP').textContent=totalXP();
+  document.getElementById('topRank').textContent=myRank();
+}
+
+/* =======================================================================
+   ROUTER
+   ======================================================================= */
+function navigate(view){
+  state.view=view; toggleSidebar(false);
+  if(view==='home') renderHome();
+  else if(view==='exam') renderExam();
+  else if(view==='board') renderBoard();
+  else if(view.startsWith('lesson:')) renderLesson(view.split(':')[1]);
+  refreshSidebarState();
+  document.getElementById('main').scrollTo(0,0); window.scrollTo(0,0);
+}
+
+/* =======================================================================
+   RENDER: HOME
+   ======================================================================= */
+function renderHome(){
+  setCrumb('Overzicht');
+  const c=document.getElementById('content');
+  const dc=doneCount(), tl=totalLessons();
+  let html=`
+  <div class="hero">
+    <h1>Welkom terug, <span class="g">${esc(state.nick)}</span></h1>
+    <p>Je persoonlijke leertraject voor <strong>Blazor</strong>, <strong>Web API</strong> en <strong>JavaScript</strong>. Werk de modules af, test jezelf met de quizzen en haal je hoogste score op het examen.</p>
+  </div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="v amber">${dc}/${tl}</div><div class="l">lessen voltooid</div></div>
+    <div class="stat-card"><div class="v cyan">${totalXP()}</div><div class="l">XP verdiend</div></div>
+    <div class="stat-card"><div class="v green">${myRank()}</div><div class="l">positie scorebord</div></div>
+  </div>
+  <h2 style="margin-top:10px">Je modules</h2>`;
+  COURSE.forEach((mod,i)=>{
+    const total=mod.lessons.length;
+    const done=mod.lessons.filter(l=>state.progress[l.id]!=null).length;
+    const pct=Math.round(done/total*100);
+    html+=`<div class="path-card" onclick="navigate('lesson:${mod.lessons[0].id}')">
+      <div class="pnum" style="background:${hexA(mod.color,.15)};color:${mod.color}">${mod.icon}</div>
+      <div class="pinfo"><h3>${mod.title}</h3><p>${mod.desc}</p></div>
+      <div class="pbar"><div class="pct">${done}/${total} · ${pct}%</div>
+        <div class="bar"><i style="width:${pct}%;background:${mod.color}"></i></div></div>
+    </div>`;
+  });
+  html+=`<div style="margin-top:24px;display:flex;gap:14px;flex-wrap:wrap">
+    <button class="btn btn-cyan" onclick="navigate('exam')">📝 Naar het test-examen</button>
+    <button class="btn btn-ghost" onclick="navigate('board')">🏆 Bekijk het scorebord</button>
+  </div>`;
+  c.innerHTML=html;
+}
+
+/* =======================================================================
+   RENDER: LESSON
+   ======================================================================= */
+function renderLesson(id){
+  const all=lessonList(); const idx=all.findIndex(x=>x.l.id===id);
+  if(idx<0){ renderHome(); return; }
+  const {m,l}=all[idx];
+  setCrumb(`${m.title} <b>/ ${l.title}</b>`);
+  const c=document.getElementById('content');
+  c.innerHTML=`<h1>${l.title}</h1>`;
+  const wrap=el('div');
+  l.body.forEach(b=>wrap.appendChild(renderBlock(b)));
+  c.appendChild(wrap);
+
+  // quiz
+  if(l.quiz) c.appendChild(buildQuiz(l));
+
+  // footer nav
+  const prev=all[idx-1], next=all[idx+1];
+  const fn=el('div','lesson-nav');
+  fn.innerHTML=`
+    ${prev?`<div class="ln-btn" onclick="navigate('lesson:${prev.l.id}')"><span class="dir">← Vorige</span><span class="ttl">${prev.l.title}</span></div>`:`<div class="ln-btn empty"></div>`}
+    ${next?`<div class="ln-btn next" onclick="navigate('lesson:${next.l.id}')"><span class="dir">Volgende →</span><span class="ttl">${next.l.title}</span></div>`:`<div class="ln-btn next" onclick="navigate('exam')"><span class="dir">Klaar! →</span><span class="ttl">Test-examen</span></div>`}`;
+  c.appendChild(fn);
+  highlightAll();
+}
+
+function renderBlock(b){
+  switch(b.t){
+    case 'tag':{ const d=el('div','section-tag'); d.innerHTML='● '+b.text; return d; }
+    case 'h':{ const h=el('h2'); h.textContent=b.text; return h; }
+    case 'p':{ const p=el('p'); p.innerHTML=b.html; return p; }
+    case 'ul':{ const u=el('ul'); b.items.forEach(i=>{const li=el('li');li.innerHTML=i;u.appendChild(li)}); return u; }
+    case 'ol':{ const o=el('ol'); b.items.forEach(i=>{const li=el('li');li.innerHTML=i;o.appendChild(li)}); return o; }
+    case 'note':{ const n=el('div','note'+(b.cls==='warn'?' warn':'')); n.innerHTML=`<span class="ic">${b.cls==='warn'?'⚠️':'💡'}</span><p>${b.html}</p>`; return n; }
+    case 'table':{ return buildTable(b); }
+    case 'code':{ return buildCode(b.lang,b.code); }
+    case 'exercise':{ return buildExercise(b); }
+    default: return el('div');
+  }
+}
+function buildTable(b){
+  const w=el('div','tbl'); const t=el('table');
+  const th=el('tr'); b.head.forEach(h=>{const c=el('th');c.innerHTML=h;th.appendChild(c)}); t.appendChild(th);
+  b.rows.forEach(r=>{const tr=el('tr'); r.forEach(cell=>{const td=el('td');td.innerHTML=cell;tr.appendChild(td)}); t.appendChild(tr)});
+  w.appendChild(t); return w;
+}
+function buildCode(lang,code){
+  const w=el('div','codeblock');
+  const colors=['#ff5f57','#febc2e','#28c840'];
+  let dots='<div class="dots">'+colors.map(c=>`<i style="background:${c}"></i>`).join('')+'</div>';
+  const bar=el('div','cb-bar'); bar.innerHTML=dots+`<span class="lang">${lang}</span>`;
+  const copy=el('button','copy'); copy.textContent='kopiëren';
+  copy.onclick=()=>{ navigator.clipboard.writeText(code); copy.textContent='gekopieerd!'; setTimeout(()=>copy.textContent='kopiëren',1200); };
+  bar.appendChild(copy);
+  const pre=el('pre'); const codeEl=el('code','language-'+mapLang(lang)); codeEl.textContent=code;
+  pre.appendChild(codeEl); w.appendChild(bar); w.appendChild(pre); return w;
+}
+function buildExercise(b){
+  const w=el('div','exercise');
+  const head=el('div','ex-head');
+  head.innerHTML=`<span class="tag">OEFENING</span><h4>${b.title}</h4><span class="diff">${b.diff||''}</span>`;
+  const body=el('div','ex-body'); body.innerHTML=b.html;
+  const btn=el('button','sol-toggle'); btn.textContent='▸ Toon oplossing';
+  const sol=el('div','solution'); sol.style.display='none';
+  if(b.sol){ sol.appendChild(buildCode(b.sol.lang,b.sol.code)); }
+  else if(b.solHtml){ sol.innerHTML=b.solHtml; }
+  btn.onclick=()=>{ const open=sol.style.display==='none'; sol.style.display=open?'block':'none';
+    btn.textContent=open?'▾ Verberg oplossing':'▸ Toon oplossing'; if(open) highlightAll(); };
+  body.appendChild(btn); body.appendChild(sol); w.appendChild(head); w.appendChild(body); return w;
+}
+
+/* =======================================================================
+   QUIZ
+   ======================================================================= */
+function buildQuiz(lesson){
+  const quiz=lesson.quiz;
+  const w=el('div','quiz');
+  const head=el('div','quiz-head');
+  head.innerHTML=`<div class="q-ic">?</div><h3>Mini-quiz</h3><span class="qcount">${quiz.length} vragen</span>`;
+  const body=el('div','quiz-body');
+  const answers=new Array(quiz.length).fill(null);
+
+  quiz.forEach((q,qi)=>{
+    const item=el('div','qitem');
+    let codeHtml='';
+    const qt=el('div','qtext'); qt.innerHTML=`<span class="num">${qi+1}.</span>${esc(q.q)}`;
+    item.appendChild(qt);
+    const opts=el('div','qopts');
+    q.opts.forEach((o,oi)=>{
+      const opt=el('div','qopt');
+      opt.innerHTML=`<span class="marker">${String.fromCharCode(65+oi)}</span><span>${esc(o)}</span>`;
+      opt.onclick=()=>{ if(opt.classList.contains('locked'))return;
+        opts.querySelectorAll('.qopt').forEach(x=>x.classList.remove('selected'));
+        opt.classList.add('selected'); answers[qi]=oi; };
+      opts.appendChild(opt);
+    });
+    item.appendChild(opts);
+    const ex=el('div','explain'); ex.innerHTML=`<b>Uitleg:</b> ${esc(q.ex)}`;
+    item.appendChild(ex);
+    body.appendChild(item);
+  });
+
+  const footer=el('div','quiz-footer');
+  const submit=el('button','btn btn-cyan'); submit.textContent='Controleer antwoorden';
+  const result=el('div','quiz-result');
+  const retry=el('button','btn btn-ghost'); retry.textContent='Opnieuw'; retry.style.display='none';
+  footer.appendChild(submit); footer.appendChild(retry); footer.appendChild(result);
+
+  submit.onclick=()=>{
+    if(answers.includes(null)){ result.textContent='Beantwoord eerst alle vragen.'; result.style.color='var(--red)'; return; }
+    let correct=0;
+    body.querySelectorAll('.qitem').forEach((item,qi)=>{
+      const opts=item.querySelectorAll('.qopt');
+      opts.forEach((opt,oi)=>{ opt.classList.add('locked'); opt.classList.remove('selected');
+        if(oi===quiz[qi].a){ opt.classList.add('correct'); opt.querySelector('.marker').textContent='✓'; }
+        else if(oi===answers[qi]){ opt.classList.add('wrong'); opt.querySelector('.marker').textContent='✕'; } });
+      if(answers[qi]===quiz[qi].a) correct++;
+      item.querySelector('.explain').classList.add('show');
+    });
+    const pct=Math.round(correct/quiz.length*100);
+    result.innerHTML=`${correct}/${quiz.length} correct · <span style="color:${pct>=60?'var(--green)':'var(--amber)'}">${pct}%</span>`;
+    result.style.color='var(--text)';
+    submit.style.display='none'; retry.style.display='inline-block';
+    // save best score (XP per lesson = pct)
+    const best=Math.max(state.progress[lesson.id]||0, pct);
+    state.progress[lesson.id]=best; saveProgress(); refreshSidebarState();
+  };
+  retry.onclick=()=>{ renderLesson(lesson.id); };
+
+  w.appendChild(head); w.appendChild(body); w.appendChild(footer); return w;
+}
+
+/* =======================================================================
+   EXAM
+   ======================================================================= */
+function renderExam(){
+  setCrumb('Test-examen');
+  const c=document.getElementById('content');
+  c.innerHTML=`<div class="section-title"><h1>📝 Test-examen</h1></div>
+  <p class="lead">Eén poging, ${EXAM.length} vragen over alle modules. Je score wordt bewaard op het scorebord.</p>
+  <div class="exam-intro">
+    <div class="big-ic">🎯</div>
+    <h2>Klaar voor de test?</h2>
+    <p>Het examen bevat vragen over Blazor, Web API en JavaScript. Na het indienen krijg je je score én de volledige verbetering met uitleg.</p>
+    <div class="exam-meta">
+      <div class="m"><b>${EXAM.length}</b> vragen</div>
+      <div class="m"><b>geen</b> tijdslimiet</div>
+      <div class="m"><b>${myExamScore()??'—'}</b>${myExamScore()!=null?'% beste':' nog geen poging'}</div>
+    </div>
+    <button class="btn btn-cyan" style="width:auto;padding:14px 32px" onclick="startExam()">Start het examen →</button>
+  </div>`;
+}
+function myExamScore(){ const e=getBoard().find(x=>x.nick===state.nick); return e&&e.examScore!=null?e.examScore:null; }
+
+function startExam(){
+  const c=document.getElementById('content');
+  c.innerHTML=`<div class="section-title"><h1>Test-examen</h1></div><p class="lead">Beantwoord alle ${EXAM.length} vragen en dien daarna in.</p>`;
+  const wrap=el('div','quiz');
+  const head=el('div','quiz-head');
+  head.innerHTML=`<div class="q-ic">✎</div><h3>Examenvragen</h3><span class="qcount" id="examCount">0 / ${EXAM.length}</span>`;
+  const body=el('div','quiz-body');
+  const answers=new Array(EXAM.length).fill(null);
+
+  EXAM.forEach((q,qi)=>{
+    const item=el('div','qitem');
+    const qt=el('div','qtext'); qt.innerHTML=`<span class="num">${qi+1}.</span>${esc(q.q)}`; item.appendChild(qt);
+    const opts=el('div','qopts');
+    q.opts.forEach((o,oi)=>{
+      const opt=el('div','qopt');
+      opt.innerHTML=`<span class="marker">${String.fromCharCode(65+oi)}</span><span>${esc(o)}</span>`;
+      opt.onclick=()=>{ if(opt.classList.contains('locked'))return;
+        opts.querySelectorAll('.qopt').forEach(x=>x.classList.remove('selected'));
+        opt.classList.add('selected'); answers[qi]=oi;
+        document.getElementById('examCount').textContent=`${answers.filter(a=>a!==null).length} / ${EXAM.length}`; };
+      opts.appendChild(opt);
+    });
+    item.appendChild(opts);
+    const ex=el('div','explain'); ex.innerHTML=`<b>Uitleg:</b> ${esc(q.ex)}`; item.appendChild(ex);
+    body.appendChild(item);
+  });
+
+  const footer=el('div','quiz-footer');
+  const submit=el('button','btn btn-cyan'); submit.textContent='Examen indienen';
+  const warn=el('div','quiz-result');
+  footer.appendChild(submit); footer.appendChild(warn);
+
+  submit.onclick=()=>{
+    if(answers.includes(null)){ warn.textContent='Beantwoord eerst alle vragen ('+answers.filter(a=>a!==null).length+'/'+EXAM.length+').'; warn.style.color='var(--red)'; return; }
+    let correct=0;
+    body.querySelectorAll('.qitem').forEach((item,qi)=>{
+      item.querySelectorAll('.qopt').forEach((opt,oi)=>{ opt.classList.add('locked');opt.classList.remove('selected');
+        if(oi===EXAM[qi].a){opt.classList.add('correct');opt.querySelector('.marker').textContent='✓';}
+        else if(oi===answers[qi]){opt.classList.add('wrong');opt.querySelector('.marker').textContent='✕';} });
+      if(answers[qi]===EXAM[qi].a) correct++;
+      item.querySelector('.explain').classList.add('show');
+    });
+    submit.style.display='none';
+    const pct=Math.round(correct/EXAM.length*100);
+    saveExamScore(pct);
+    // banner
+    const banner=el('div','exam-scorebanner');
+    let col=pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
+    let msg=pct>=80?'Uitstekend! 🏆':pct>=50?'Geslaagd! 👍':'Nog wat oefenen 💪';
+    banner.style.borderColor=col;
+    banner.innerHTML=`<div class="grade" style="color:${col}">${pct}%</div>
+      <div class="msg">${correct} van ${EXAM.length} correct — <strong>${msg}</strong></div>
+      <div style="margin-top:14px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-cyan" style="width:auto" onclick="navigate('board')">🏆 Naar scorebord</button>
+        <button class="btn btn-ghost" onclick="startExam()">Opnieuw proberen</button>
+      </div>`;
+    c.insertBefore(banner, c.children[1]);
+    refreshSidebarState(); window.scrollTo(0,0); document.getElementById('main').scrollTo(0,0);
+  };
+
+  wrap.appendChild(head); wrap.appendChild(body); wrap.appendChild(footer); c.appendChild(wrap);
+}
+function saveExamScore(pct){
+  let b=getBoard(); let e=b.find(x=>x.nick===state.nick);
+  const date=new Date().toLocaleDateString('nl-BE',{day:'2-digit',month:'short'});
+  if(e){ e.examScore=Math.max(e.examScore||0,pct); e.date=date; }
+  else { b.push({nick:state.nick,examScore:pct,date}); }
+  saveBoard(b);
+}
+
+/* =======================================================================
+   SCOREBOARD
+   ======================================================================= */
+function renderBoard(){
+  setCrumb('Scorebord');
+  const c=document.getElementById('content');
+  let b=getBoard().filter(e=>e.examScore!=null).sort((a,b)=>b.examScore-a.examScore);
+  let rows='';
+  if(b.length===0){
+    rows=`<div class="lb-empty">Nog geen examenscores. Leg het <a onclick="navigate('exam')" style="cursor:pointer">test-examen</a> af om op het bord te komen!</div>`;
+  } else {
+    rows=`<div class="lb-row head"><span>#</span><span>Speler</span><span>Score</span><span>Datum</span></div>`;
+    b.forEach((e,i)=>{
+      const cls=[i===0?'gold':i===1?'silver':i===2?'bronze':'', e.nick===state.nick?'me':''].join(' ');
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+      rows+=`<div class="lb-row ${cls}">
+        <span class="rk">${medal}</span>
+        <span class="nm"><span class="av">${initials(e.nick)}</span>${esc(e.nick)}${e.nick===state.nick?' <span style="color:var(--dim);font-weight:400;font-size:12px">(jij)</span>':''}</span>
+        <span class="sc">${e.examScore}%</span>
+        <span class="dt">${e.date||'—'}</span>
+      </div>`;
+    });
+  }
+  c.innerHTML=`<div class="section-title"><h1>🏆 Scorebord</h1></div>
+  <p class="lead">Ranking op basis van de beste examenscore. Scores worden lokaal in deze browser bewaard.</p>
+  <div class="lb">${rows}</div>
+  <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
+    <button class="btn btn-cyan" style="width:auto" onclick="navigate('exam')">📝 Doe (opnieuw) het examen</button>
+    <button class="btn btn-ghost" onclick="resetBoard()">Scorebord wissen</button>
+  </div>`;
+}
+function resetBoard(){
+  if(confirm('Het volledige scorebord wissen? Dit kan niet ongedaan gemaakt worden.')){
+    localStorage.removeItem(LS.board); renderBoard(); refreshSidebarState();
+  }
+}
+
+/* =======================================================================
+   HELPERS
+   ======================================================================= */
+function el(tag,cls){ const e=document.createElement(tag); if(cls) e.className=cls; return e; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hexA(hex,a){ const n=parseInt(hex.slice(1),16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+function setCrumb(html){ document.getElementById('crumb').innerHTML=html; }
+function mapLang(l){ return ({razor:'cshtml',csharp:'csharp',javascript:'javascript',html:'html',text:'plaintext'})[l]||'plaintext'; }
+function highlightAll(){ if(window.hljs){ document.querySelectorAll('pre code:not(.hljs)').forEach(b=>{ try{hljs.highlightElement(b)}catch(e){} }); } }
+function toggleSidebar(force){
+  const sb=document.getElementById('sidebar'); const bd=document.getElementById('backdrop');
+  const open=force===undefined?!sb.classList.contains('open'):force;
+  sb.classList.toggle('open',open); bd.classList.toggle('show',open);
+}
+</script>
+</body>
+</html>
